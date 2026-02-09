@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useSocketEmit } from '@/shared/hooks/use-socket';
-import { Button, Logo, RoomCard, TextInput, RangeSlider, CodeInput, ToastProvider, showNotification } from '@/src/shared/ui';
+import { Button, Logo, RoomCard, TextInput, RangeSlider, CodeInput, showNotification } from '@/src/shared/ui';
 import { useAuthStore } from '@/src/shared/store';
 import type { RoomCreateResponse, RoomJoinResponse } from '@/src/shared/types';
 
@@ -84,8 +84,7 @@ export default function CreatePage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-200 font-mono">
-      <ToastProvider />
-      <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col gap-4 items-center">
+      <div className="flex flex-col gap-4 items-center">
         {/* Кнопка назад */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}

@@ -18,7 +18,7 @@ function Notification({ t, type, title, message }: NotificationProps) {
 					fill="none"
 					viewBox="0 0 24 24"
 					stroke="currentColor"
-					className="w-5 h-5 text-orange-500"
+					className="w-[24px] h-[24px] text-orange-500"
 				>
 					<path
 						strokeLinecap="round"
@@ -40,7 +40,7 @@ function Notification({ t, type, title, message }: NotificationProps) {
 					fill="none"
 					viewBox="0 0 24 24"
 					stroke="currentColor"
-					className="w-5 h-5 text-green-500"
+					className="w-[24px] h-[24px] text-green-500"
 				>
 					<path
 						strokeLinecap="round"
@@ -62,7 +62,7 @@ function Notification({ t, type, title, message }: NotificationProps) {
 					fill="none"
 					viewBox="0 0 24 24"
 					stroke="currentColor"
-					className="w-5 h-5 text-red-500"
+					className="w-[24px] h-[24px] text-red-500"
 				>
 					<path
 						strokeLinecap="round"
@@ -72,36 +72,34 @@ function Notification({ t, type, title, message }: NotificationProps) {
 					/>
 				</svg>
 			),
-			bgColor: 'bg-red-600',
 			borderColor: 'border-red-600',
 			textColor: 'text-red-500',
 			stripe: 'bg-[repeating-linear-gradient(45deg,#dc2626,#dc2626_10px,#000_10px,#000_20px)]',
 		},
 	};
 
-	const { icon, bgColor, borderColor, textColor, stripe } = config[type];
+	const { icon, textColor, stripe } = config[type];
 
 	return (
 		<div
-			className={`relative bg-neutral-900 border-l-4 border-t border-r border-b ${borderColor} border-neutral-700 p-4 shadow-[0_0_20px_rgba(0,0,0,0.5)] transform transition-all ${
-				t.visible ? 'translate-x-0' : 'translate-x-full'
+			className={`relative bg-neutral-900 border-l-4 border-t border-r border-b border-neutral-700 p-4 shadow-[0_0_20px_rgba(0,0,0,0.5)] transform transition-all duration-300 ${
+				t.visible ? 'translate-x-0 opacity-100' : 'translate-x-[calc(100%+2rem)] opacity-0'
 			}`}
 		>
 			<div className="flex items-start gap-3">
-				<div className={`${bgColor} p-2 border ${borderColor}`}>{icon}</div>
+				<div className={`p-2`}>{icon}</div>
 				<div className="flex-1">
 					<div className="flex justify-between items-center mb-1">
-						<span className={`text-[10px] font-black uppercase tracking-[0.2em] ${textColor}`}>{title}</span>
-						<span className="text-[9px] text-neutral-600">JUST NOW</span>
+						<span className={`text-lg font-black uppercase ${textColor}`}>{title}</span>
 					</div>
-					<p className="text-xs leading-relaxed text-neutral-400">{message}</p>
+					<p className="text-sm leading-relaxed text-neutral-400">{message}</p>
 				</div>
 				<button
 					aria-label="Dismiss notification"
 					onClick={() => toast.dismiss(t.id)}
 					className="text-neutral-600 hover:text-neutral-400 transition-colors"
 				>
-					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4">
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-[15px] h-[15px]">
 						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
 					</svg>
 				</button>

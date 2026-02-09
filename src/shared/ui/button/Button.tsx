@@ -2,7 +2,7 @@
 
 import { ButtonHTMLAttributes } from 'react';
 import { motion, MotionProps } from 'framer-motion';
-import { useSound } from '@/hooks/use-sound';
+import { useSound } from '@/src/shared/hooks/use-sound';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'start';

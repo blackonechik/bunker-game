@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs */
 'use client';
 
 import { useRef, useCallback } from 'react';
@@ -16,7 +17,7 @@ export function useSound() {
     }
     if (!confirmAudioRef.current) {
       confirmAudioRef.current = new Audio('/audio/confirmation.mp3');
-      confirmAudioRef.current.volume = 0.5;
+      confirmAudioRef.current.volume = 0.2;
     }
     if (!errorAudioRef.current) {
       errorAudioRef.current = new Audio('/audio/reject-notification.mp3');

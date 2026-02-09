@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
+import { useSound } from '../../hooks';
 
 interface RoomCardProps {
 	mode: 'create' | 'join';
@@ -12,6 +13,7 @@ interface RoomCardProps {
 }
 
 export function RoomCard({ mode, isActive, onFocus, children, delay = 0 }: RoomCardProps) {
+	const {playClick} = useSound();
 	const config = {
 		create: {
 			title: 'Создать убежище',
@@ -33,13 +35,18 @@ export function RoomCard({ mode, isActive, onFocus, children, delay = 0 }: RoomC
 
 	const cardConfig = config[mode];
 
+	const handleClick = () => {
+		onFocus();
+		playClick();
+	}
+
 	return (
 		<motion.div
 			initial={{ opacity: 0, x: cardConfig.direction }}
 			animate={{ opacity: 1, x: 0 }}
 			transition={{ delay }}
 			className={`p-8 bg-zinc-900 border-2 ${cardConfig.borderColor} rounded-sm relative cursor-pointer`}
-			onClick={onFocus}
+			onClick={handleClick}
 		>
 			{cardConfig.badge && (
 				<div className="absolute top-0 right-0 p-2 bg-zinc-800 text-[10px] text-zinc-500 uppercase tracking-widest">

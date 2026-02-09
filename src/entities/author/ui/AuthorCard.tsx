@@ -1,5 +1,6 @@
 'use client';
 
+import { useSound } from '@/src/shared/hooks';
 import { Author } from '../model';
 
 
@@ -8,6 +9,7 @@ interface AuthorCardProps {
 }
 
 export function AuthorCard({ author }: AuthorCardProps) {
+	const { playConfirmation } = useSound();
 	const colorClasses = {
 		emerald: {
 			border: 'group-hover:border-emerald-500',
@@ -41,7 +43,7 @@ export function AuthorCard({ author }: AuthorCardProps) {
 	const colors = colorClasses[author.accentColor];
 
 	return (
-		<article className="min-w-[85vw] md:min-w-0 snap-center group relative bg-zinc-900/80 border-2 border-zinc-800 p-1 flex flex-col transition-all duration-500 hover:border-emerald-500/50 shadow-[rgba(0,0,0,0.9)_0px_0px_40px_inset,rgba(0,0,0,0.5)_0px_10px_30px]">
+		<article className="min-w-[85vw] md:min-w-0 snap-center group relative bg-zinc-900/80 border-2 border-zinc-800 p-1 flex flex-col transition-all duration-500 shadow-[rgba(0,0,0,0.9)_0px_0px_40px_inset,rgba(0,0,0,0.5)_0px_10px_30px]" onMouseEnter={playConfirmation}>
 			{/* Corner decorations */}
 			<div className={`absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-zinc-700 ${colors.border}`} />
 			<div className={`absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-zinc-700 ${colors.border}`} />
