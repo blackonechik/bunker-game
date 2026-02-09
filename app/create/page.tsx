@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useSocketEmit } from '@/hooks/use-socket';
-import { Button } from '@/components/ui/Button';
+import { useSocketEmit } from '@/shared/hooks/use-socket';
+import { Button } from '@/shared/ui/button';
 
 export default function CreatePage() {
   const router = useRouter();
@@ -115,6 +115,7 @@ export default function CreatePage() {
         >
           <Button 
             variant="secondary" 
+            size='small'
             onClick={() => router.push('/')}
             className="flex items-center gap-2"
           >

@@ -3,27 +3,35 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useSocket } from '@/providers/socket-provider';
-import { useSocketEvent } from '@/hooks/use-socket';
-import { PlayerDTO, RoomDTO, RoomState } from '@/lib/types';
+import { useSocket } from '@/app/providers/socket-provider';
+import { useSocketEvent } from '@/shared/hooks/use-socket';
+import { PlayerDTO, RoomDTO, RoomState } from '@/shared/types';
 
-export default function LobbyPage({ params }: { params: { code: string } }) {
+export default function LobbyPage({ params }: { params: Promise<{ code: string }> }) {
   const router = useRouter();
   const { socket, isConnected } = useSocket();
   const [room, setRoom] = useState<RoomDTO | null>(null);
   const [players, setPlayers] = useState<PlayerDTO[]>([]);
   const [loading, setLoading] = useState(true);
+  const [code, setCode] = useState<string>('');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
   const playerId = typeof window !== 'undefined' ? localStorage.getItem('bunker_player_id') : null;
   const isHost = room?.players?.find(p => p.id.toString() === playerId)?.isHost;
 
+  // Распаковка params
+  useEffect(() => {
+    params.then(p => setCode(p.code));
+  }, [params]);
+
   // Загрузка данных комнаты
   useEffect(() => {
+    if (!code) return;
+
     const fetchRoom = async () => {
       try {
-        const res = await fetch(`/api/rooms/${params.code}`);
+        const res = await fetch(`/api/rooms/${code}`);
         const data = await res.json();
         
         if (data.success) {
@@ -39,10 +47,8 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
       }
     };
 
-    if (params.code) {
-      fetchRoom();
-    }
-  }, [params.code]);
+    fetchRoom();
+  }, [code]);
 
   // Подписка на обновления комнаты
   useSocketEvent<{ room: RoomDTO; players: PlayerDTO[] }>('room:update', (data) => {
@@ -57,7 +63,7 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
 
   // Подписка на старт игры
   useSocketEvent<{ state: RoomState }>('game:started', () => {
-    router.push(`/game/${params.code}`);
+    router.push(`/game/${code}`);
   });
 
   const handleStartGame = () => {
@@ -74,14 +80,14 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
   };
 
   const handleCopyLink = () => {
-    const link = `${window.location.origin}/join/${params.code}`;
+    const link = `${window.location.origin}/join/${code}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(params.code);
+    navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -125,7 +131,7 @@ export default function LobbyPage({ params }: { params: { code: string } }) {
               onClick={handleCopyCode}
               className="px-4 py-2 bg-zinc-800 border border-zinc-700 text-emerald-400 font-bold tracking-widest hover:border-emerald-500 transition-colors"
             >
-              {copied ? '✓ Скопировано' : `#${params.code}`}
+              {copied ? '✓ Скопировано' : `#${code}`}
             </button>
 
             <button

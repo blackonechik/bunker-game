@@ -3,17 +3,18 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useSocket } from '@/providers/socket-provider';
-import { useSocketEvent } from '@/hooks/use-socket';
-import { PlayerDTO, RoomDTO, RoomState, ChatMessageDTO, ApocalypseDTO, LocationDTO } from '@/lib/types';
-import { ChatPanel } from '@/components/game/ChatPanel';
-import { PlayerCard } from '@/components/game/PlayerCard';
-import { PlayerList } from '@/components/game/PlayerList';
+import { useSocket } from '@/app/providers/socket-provider';
+import { useSocketEvent } from '@/shared/hooks/use-socket';
+import { PlayerDTO, RoomDTO, RoomState, ChatMessageDTO, ApocalypseDTO, LocationDTO } from '@/shared/types';
+import { ChatPanel } from '@/widgets/chat-panel';
+import { PlayerCard } from '@/widgets/player-list';
+import { PlayerList } from '@/widgets/player-list';
 
-export default function GamePage({ params }: { params: { code: string } }) {
+export default function GamePage({ params }: { params: Promise<{ code: string }> }) {
   const router = useRouter();
   const { socket, isConnected } = useSocket();
   
+  const [code, setCode] = useState<string>('');
   const [room, setRoom] = useState<RoomDTO | null>(null);
   const [players, setPlayers] = useState<PlayerDTO[]>([]);
   const [messages, setMessages] = useState<ChatMessageDTO[]>([]);
@@ -37,11 +38,18 @@ export default function GamePage({ params }: { params: { code: string } }) {
     }]);
   }, [room?.id]);
 
+  // Распаковка params
+  useEffect(() => {
+    params.then(p => setCode(p.code));
+  }, [params]);
+
   // Загрузка данных
   useEffect(() => {
+    if (!code) return;
+
     const fetchRoom = async () => {
       try {
-        const res = await fetch(`/api/rooms/${params.code}`);
+        const res = await fetch(`/api/rooms/${code}`);
         const data = await res.json();
         
         if (data.success) {
@@ -56,7 +64,7 @@ export default function GamePage({ params }: { params: { code: string } }) {
     };
 
     fetchRoom();
-  }, [params.code]);
+  }, [code]);
 
   // Socket события
   useSocketEvent<{ apocalypses: ApocalypseDTO[] }>('apocalypse:options', (data) => {

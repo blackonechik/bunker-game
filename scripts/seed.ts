@@ -1,4 +1,4 @@
-import { seedDatabase } from '../lib/db/seed';
+import { seedDatabase } from '../src/shared/api/db/seed';
 
 async function main() {
   console.log('🌱 Starting database seeding...');

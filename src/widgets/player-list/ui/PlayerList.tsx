@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { PlayerDTO } from '@/lib/types';
+import { PlayerDTO } from '@/shared/types';
 
 interface PlayerListProps {
   players: PlayerDTO[];

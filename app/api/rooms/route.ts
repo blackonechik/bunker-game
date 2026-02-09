@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeDatabase } from '@/lib/db/data-source';
-import { RoomService } from '@/lib/services/RoomService';
+import { initializeDatabase } from '@/shared/api/db/data-source';
+import { RoomService } from '@/features/room-management';
 
 export async function POST(request: NextRequest) {
   try {

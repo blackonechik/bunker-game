@@ -1,0 +1,1 @@
+export { Apocalypse } from './model';

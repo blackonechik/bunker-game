@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeDatabase } from '@/lib/db/data-source';
-import { RoomService } from '@/lib/services/RoomService';
+import { initializeDatabase } from '@/shared/api/db/data-source';
+import { RoomService } from '@/features/room-management';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { code: string } }
+  context: { params: Promise<{ code: string }> }
 ) {
   try {
     await initializeDatabase();
+    const { code } = await context.params;
 
-    const room = await RoomService.getRoomByCode(params.code);
+    const room = await RoomService.getRoomByCode(code);
 
     if (!room) {
       return NextResponse.json(
@@ -36,10 +37,11 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { code: string } }
+  context: { params: Promise<{ code: string }> }
 ) {
   try {
     await initializeDatabase();
+    const { code } = await context.params;
 
     const body = await request.json();
     const { playerName } = body;
@@ -51,7 +53,7 @@ export async function POST(
       );
     }
 
-    const result = await RoomService.joinRoom(params.code, playerName);
+    const result = await RoomService.joinRoom(code, playerName);
 
     return NextResponse.json({
       success: true,

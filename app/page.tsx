@@ -2,11 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LoadingDoors } from '@/components/ui/LoadingDoors';
-import { BackgroundVideo } from '@/components/ui/BackgroundVideo';
-import { StartScreen } from '@/components/ui/StartScreen';
-import { MainMenu } from '@/components/ui/MainMenu';
-import { MusicButton } from '@/components/ui/MusicButton';
+import { LoadingDoors } from '@/shared/ui/loading-doors';
+import { BackgroundVideo } from '@/shared/ui/background-video';
+import { MusicButton } from '@/shared/ui/music-button';
+import { StartScreen } from '@/widgets/start-screen';
+import { MainMenu } from '@/widgets/main-menu';
 
 export default function Home() {
   const [showStart, setShowStart] = useState(true);

@@ -1,8 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Logo } from './Logo';
-import { Button } from './Button';
+import { Logo } from '@/shared/ui/logo';
+import { Button } from '@/shared/ui/button';
 
 interface MainMenuProps {
   onPlay: () => void;
@@ -23,7 +23,7 @@ export function MainMenu({ onPlay }: MainMenuProps) {
             Играть
           </Button>
 
-          <Button variant="secondary">
+          <Button variant='secondary' size='small'>
             Об авторах
           </Button>
         </motion.div>

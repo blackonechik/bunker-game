@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChatMessageDTO } from '@/lib/types';
+import { ChatMessageDTO } from '@/shared/types';
 
 interface ChatPanelProps {
   messages: ChatMessageDTO[];

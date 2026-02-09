@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { PlayerCardDTO } from '@/lib/types';
+import { PlayerCardDTO } from '@/shared/types';
 
 interface PlayerCardProps {
   card: PlayerCardDTO;
