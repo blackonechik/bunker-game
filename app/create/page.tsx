@@ -33,7 +33,7 @@ export default function CreatePage() {
         playerName: playerName.trim(),
       });
 
-      setAuth(result.token, result.playerId);
+      setAuth(result.token, result.playerId, playerName.trim());
 
       showNotification.success('Комната создана', `Код доступа: ${result.code}`);
 
@@ -68,7 +68,7 @@ export default function CreatePage() {
         playerName: playerName.trim(),
       });
 
-      setAuth(result.token, result.playerId);
+      setAuth(result.token, result.playerId, playerName.trim());
 
       showNotification.success('Подключение успешно', 'Добро пожаловать в убежище!');
 

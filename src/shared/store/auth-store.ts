@@ -4,44 +4,41 @@ import { persist } from 'zustand/middleware';
 interface AuthState {
 	token: string | null;
 	playerId: number | null;
-	expiresAt: number | null;
+	playerName: string | null;
 	_hasHydrated: boolean;
-	setAuth: (token: string, playerId: number) => void;
+	setAuth: (token: string, playerId: number, playerName: string) => void;
+	setName: (name: string) => void;
 	clearAuth: () => void;
 	isValid: () => boolean;
 	setHasHydrated: (state: boolean) => void;
 }
-
-const ONE_DAY = 24 * 60 * 60 * 1000; // 1 день в миллисекундах
 
 export const useAuthStore = create<AuthState>()(
 	persist(
 		(set, get) => ({
 			token: null,
 			playerId: null,
-			expiresAt: null,
+			playerName: null,
 			_hasHydrated: false,
-			setAuth: (token, playerId) =>
+			setAuth: (token, playerId, playerName) =>
 				set({
 					token,
 					playerId,
-					expiresAt: Date.now() + ONE_DAY,
+					playerName,
+				}),
+			setName: (name) =>
+				set({
+					playerName: name,
 				}),
 			clearAuth: () =>
 				set({
 					token: null,
 					playerId: null,
-					expiresAt: null,
+					playerName: null,
 				}),
 			isValid: () => {
 				const state = get();
-				console.log(state);
-				if (!state.token || !state.expiresAt) return false;
-				if (Date.now() > state.expiresAt) {
-					get().clearAuth();
-					return false;
-				}
-				return true;
+				return !!state.token && !!state.playerId;
 			},
 			setHasHydrated: (state) => {
 				set({ _hasHydrated: state });

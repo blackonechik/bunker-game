@@ -9,3 +9,6 @@ export { TextInput } from './text-input';
 export { RangeSlider } from './range-slider';
 export { CodeInput } from './code-input';
 export { ToastProvider, showNotification } from './toast';
+export { NameModal } from './name-modal';
+export { PlayerCard } from './player-card';
+export { EmptyPlayerSlot } from './empty-player-slot';

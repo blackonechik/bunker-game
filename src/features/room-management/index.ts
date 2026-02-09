@@ -1,1 +1,1 @@
-export { RoomService } from './api/room-service';
+export { lobbyApi } from './api/lobby-service';

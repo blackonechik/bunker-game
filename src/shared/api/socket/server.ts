@@ -3,7 +3,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { NextApiRequest } from 'next';
 import { NextApiResponse } from 'next';
 import { initializeDatabase } from '../db/data-source';
-import { RoomService } from '@/features/room-management';
+import { RoomService } from '@/src/features/room-management/api/room-service';
 import { GameService } from '@/features/game-flow';
 import { verifyToken } from '@/shared/lib/jwt';
 import {
