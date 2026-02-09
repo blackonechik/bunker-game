@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useSocketEmit } from '@/hooks/use-socket';
+import { Button } from '@/components/ui/Button';
 
 export default function CreatePage() {
   const router = useRouter();
@@ -106,6 +107,23 @@ export default function CreatePage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-200 font-mono">
       <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Кнопка назад */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="mb-8"
+        >
+          <Button 
+            variant="secondary" 
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Назад
+          </Button>
+        </motion.div>
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -179,7 +197,7 @@ export default function CreatePage() {
           </motion.div>
           
 
-          {/* Войти в комнату */}
+          {/* Присоединиться к убежищу */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -189,7 +207,7 @@ export default function CreatePage() {
           >
             <h2 className="text-2xl font-bold uppercase mb-8 flex items-center gap-3">
               <span className={`w-3 h-3 rounded-full ${mode === 'join' ? 'bg-amber-500 animate-pulse' : 'bg-zinc-700'}`}></span>
-              Войти по коду
+              Присоединиться к убежищу
             </h2>
 
             <div className="space-y-6">
