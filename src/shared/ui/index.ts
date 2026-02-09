@@ -8,3 +8,4 @@ export { RoomCard } from './room-card';
 export { TextInput } from './text-input';
 export { RangeSlider } from './range-slider';
 export { CodeInput } from './code-input';
+export { ToastProvider, showNotification } from './toast';
