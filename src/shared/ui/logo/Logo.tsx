@@ -2,22 +2,49 @@
 
 import { motion } from 'framer-motion';
 
-export function Logo() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="relative"
-    >
-      <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-zinc-100 to-zinc-600 uppercase">
-        Bunker
-      </h1>
-      <span className="absolute bottom-0 -left-4 px-1 py-px bg-emerald-500 text-black text-xs font-bold uppercase -rotate-12">
-        12+
+interface LogoProps {
+  size?: 'small' | 'medium' | 'large';
+  className?: string;
+}
+
+export function Logo({ size = 'medium', className = '' }: LogoProps) {
+	const sizeClasses = {
+		small: {
+			title: 'text-4xl md:text-5xl',
+			ageBadge: 'text-[8px] px-0.5 py-px -left-2 bottom-0',
+			protocolBadge: 'text-[10px] px-1 py-0.5 -right-2 -top-2'
+		},
+		medium: {
+			title: 'text-7xl md:text-9xl',
+			ageBadge: 'text-xs px-1 py-px -left-4 bottom-0',
+			protocolBadge: 'text-sm px-2 py-1 -right-4 -top-4'
+		},
+		large: {
+			title: 'text-8xl md:text-[12rem]',
+			ageBadge: 'text-sm px-2 py-1 -left-6 bottom-0',
+			protocolBadge: 'text-base px-3 py-1.5 -right-6 -top-6'
+		}
+	};
+
+	const classes = sizeClasses[size];
+
+	return (
+		<motion.div
+			initial={{ opacity: 0, y: 50 }}
+			animate={{ opacity: 1, y: 0 }}
+			className={`relative flex items-center justify-center w-[min-content] ${className}`}
+		>
+			<h1 className={`${classes.title} max-w- font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-zinc-100 to-zinc-600 uppercase`}>
+				Bunker
+			</h1>
+
+			<span className={`absolute ${classes.ageBadge} bg-emerald-500 text-black font-bold uppercase -rotate-12`}>
+				12+
+			</span>
+			<span className={`absolute ${classes.protocolBadge} bg-amber-500 text-black font-bold uppercase rotate-12`}>
+        404 Protocol
       </span>
-      <span className="absolute -top-4 -right-4 px-2 py-1 bg-amber-500 text-black text-sm font-bold uppercase rotate-12">
-        Protocol 404
-      </span>
+
     </motion.div>
   );
 }

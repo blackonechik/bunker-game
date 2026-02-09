@@ -12,7 +12,7 @@ export function MainMenu({ onPlay }: MainMenuProps) {
   return (
     <main className="relative z-20 max-w-6xl mx-auto px-4 py-8">
       <section className="min-h-screen flex flex-col items-center justify-center text-center space-y-12">
-        <Logo />
+        <Logo size='large'/>
 
         <motion.div
           initial={{ opacity: 0, y: 50 }}

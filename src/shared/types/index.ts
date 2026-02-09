@@ -132,3 +132,18 @@ export interface GameStatsDTO {
   survivorCount: number;
   eliminatedCount: number;
 }
+
+// API Response Types
+export interface RoomCreateResponse {
+  code: string;
+  roomId: number;
+  playerId: number;
+  token: string;
+}
+
+export interface RoomJoinResponse {
+  roomId: number;
+  playerId: number;
+  token: string;
+}
+

@@ -1,5 +1,10 @@
 export { BackgroundVideo } from './background-video';
 export { Button } from './button';
+export { ActionButton } from './action-button';
 export { LoadingDoors } from './loading-doors';
 export { Logo } from './logo';
 export { MusicButton } from './music-button';
+export { RoomCard } from './room-card';
+export { TextInput } from './text-input';
+export { RangeSlider } from './range-slider';
+export { CodeInput } from './code-input';

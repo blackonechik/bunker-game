@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useSocket } from '@/app/providers/socket-provider';
 
 export function useSocketEvent<T = any>(event: string, handler: (data: T) => void) {

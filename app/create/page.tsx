@@ -4,15 +4,17 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useSocketEmit } from '@/shared/hooks/use-socket';
-import { Button } from '@/shared/ui/button';
+import { Button, Logo, RoomCard, TextInput, RangeSlider, CodeInput } from '@/src/shared/ui';
+import { useAuthStore } from '@/src/shared/store';
+import type { RoomCreateResponse, RoomJoinResponse } from '@/src/shared/types';
 
 export default function CreatePage() {
   const router = useRouter();
   const { emit } = useSocketEmit();
+  const { setAuth } = useAuthStore();
   const [mode, setMode] = useState<'create' | 'join'>('create');
   const [playerName, setPlayerName] = useState('');
   const [maxPlayers, setMaxPlayers] = useState(10);
-  const [hardcore, setHardcore] = useState(false);
   const [roomCode, setRoomCode] = useState(['', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,15 +29,13 @@ export default function CreatePage() {
     setError('');
 
     try {
-      const result = await emit<{ code: string; roomId: number; playerId: number; token: string }>('room:create', {
+      const result = await emit<RoomCreateResponse>('room:create', {
         maxPlayers,
-        hardcore,
+        hardcore: false,
         playerName: playerName.trim(),
       });
 
-      // Сохраняем токен
-      localStorage.setItem('bunker_token', result.token);
-      localStorage.setItem('bunker_player_id', result.playerId.toString());
+      setAuth(result.token, result.playerId);
 
       // Переходим в лобби
       router.push(`/lobby/${result.code}`);
@@ -64,14 +64,12 @@ export default function CreatePage() {
     setError('');
 
     try {
-      const result = await emit<{ roomId: number; playerId: number; token: string }>('room:join', {
+      const result = await emit<RoomJoinResponse>('room:join', {
         code: code.toUpperCase(),
         playerName: playerName.trim(),
       });
 
-      // Сохраняем токен
-      localStorage.setItem('bunker_token', result.token);
-      localStorage.setItem('bunker_player_id', result.playerId.toString());
+      setAuth(result.token, result.playerId);
 
       // Переходим в лобби
       router.push(`/lobby/${code.toUpperCase()}`);
@@ -83,35 +81,14 @@ export default function CreatePage() {
     }
   };
 
-  const handleCodeInput = (index: number, value: string) => {
-    if (value.length > 1) value = value[0];
-    
-    const newCode = [...roomCode];
-    newCode[index] = value.toUpperCase();
-    setRoomCode(newCode);
-
-    // Автоматический переход к следующему полю
-    if (value && index < 3) {
-      const nextInput = document.getElementById(`code-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  const handleCodeKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !roomCode[index] && index > 0) {
-      const prevInput = document.getElementById(`code-${index - 1}`);
-      prevInput?.focus();
-    }
-  };
-
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-200 font-mono">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col gap-4 items-center">
         {/* Кнопка назад */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="mb-8"
+          className="mb-8 self-start"
         >
           <Button 
             variant="secondary" 
@@ -126,137 +103,75 @@ export default function CreatePage() {
           </Button>
         </motion.div>
         
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl md:text-6xl font-black uppercase italic text-transparent bg-clip-text bg-gradient-to-b from-zinc-100 to-zinc-600">
-            Bunker
-          </h1>
-        </motion.div>
+        <Logo className='m-4'/>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {/* Создать комнату */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className={`p-8 bg-zinc-900 border-2 ${mode === 'create' ? 'border-emerald-500' : 'border-zinc-800'} rounded-sm relative cursor-pointer`}
-            onClick={() => setMode('create')}
-          >
-            <div className="absolute top-0 right-0 p-2 bg-zinc-800 text-[10px] text-zinc-500 uppercase tracking-widest">
-              Initialize
-            </div>
+          <RoomCard mode="create" isActive={mode === 'create'} onFocus={() => setMode('create')} delay={0.2}>
+            <TextInput
+              label="Ваше имя"
+              variant="emerald"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              onFocus={() => setMode('create')}
+              maxLength={20}
+              placeholder="STALKER_01"
+            />
 
-            <h2 className="text-2xl font-bold uppercase mb-8 flex items-center gap-3">
-              <span className={`w-3 h-3 rounded-full ${mode === 'create' ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-700'}`}></span>
-              Создать убежище
-            </h2>
+            <RangeSlider
+              label={`Игроков: ${maxPlayers}`}
+              variant="emerald"
+              min={4}
+              max={16}
+              value={maxPlayers}
+              onChange={(e) => setMaxPlayers(parseInt(e.target.value))}
+              onFocus={() => setMode('create')}
+            />
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs uppercase text-zinc-500 font-bold">Ваше имя</label>
-                <input
-                  type="text"
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  onFocus={() => setMode('create')}
-                  maxLength={20}
-                  className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 focus:border-emerald-500 outline-none text-emerald-400 font-bold uppercase transition-colors"
-                  placeholder="STALKER_01"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs uppercase text-zinc-500 font-bold">
-                  Игроков: {maxPlayers}
-                </label>
-                <input
-                  type="range"
-                  min="4"
-                  max="16"
-                  value={maxPlayers}
-                  onChange={(e) => setMaxPlayers(parseInt(e.target.value))}
-                  onFocus={() => setMode('create')}
-                  className="w-full accent-emerald-500 bg-zinc-800"
-                />
-              </div>
-
-              {mode === 'create' && (
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  onClick={handleCreate}
-                  disabled={loading}
-                  className="w-full py-4 bg-emerald-600 text-black font-black uppercase tracking-tighter hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Создание...' : 'Сгенерировать код'}
-                </motion.button>
-              )}
-            </div>
-          </motion.div>
+            {mode === 'create' && (
+              <Button
+                onClick={handleCreate}
+                disabled={loading}
+                variant="primary"
+                className="w-full"
+              >
+                {loading ? 'Создание...' : 'Сгенерировать код'}
+              </Button>
+            )}
+          </RoomCard>
           
 
           {/* Присоединиться к убежищу */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className={`p-8 bg-zinc-900 border-2 ${mode === 'join' ? 'border-amber-500' : 'border-zinc-800'} rounded-sm relative cursor-pointer`}
-            onClick={() => setMode('join')}
-          >
-            <h2 className="text-2xl font-bold uppercase mb-8 flex items-center gap-3">
-              <span className={`w-3 h-3 rounded-full ${mode === 'join' ? 'bg-amber-500 animate-pulse' : 'bg-zinc-700'}`}></span>
-              Присоединиться к убежищу
-            </h2>
+          <RoomCard mode="join" isActive={mode === 'join'} onFocus={() => setMode('join')} delay={0.3}>
+            <TextInput
+              label="Ваше имя"
+              variant="amber"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              onFocus={() => setMode('join')}
+              maxLength={20}
+              placeholder="SURVIVOR_92"
+            />
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs uppercase text-zinc-500 font-bold">Ваше имя</label>
-                <input
-                  type="text"
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  onFocus={() => setMode('join')}
-                  maxLength={20}
-                  className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 focus:border-amber-500 outline-none text-amber-400 font-bold uppercase transition-colors"
-                  placeholder="SURVIVOR_92"
-                />
-              </div>
+            <CodeInput
+              label="Код доступа"
+              variant="amber"
+              value={roomCode}
+              onChange={setRoomCode}
+              onFocus={() => setMode('join')}
+            />
 
-              <div className="space-y-2">
-                <label className="text-xs uppercase text-zinc-500 font-bold">Код доступа</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[0, 1, 2, 3].map((index) => (
-                    <input
-                      key={index}
-                      id={`code-${index}`}
-                      type="text"
-                      maxLength={1}
-                      value={roomCode[index]}
-                      onChange={(e) => handleCodeInput(index, e.target.value)}
-                      onKeyDown={(e) => handleCodeKeyDown(index, e)}
-                      onFocus={() => setMode('join')}
-                      className="w-full aspect-square bg-zinc-800 border-2 border-zinc-700 text-center text-3xl font-black text-amber-500 focus:border-amber-500 outline-none uppercase"
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {mode === 'join' && (
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  onClick={handleJoin}
-                  disabled={loading}
-                  className="w-full py-4 border-2 border-amber-500 text-amber-500 font-black uppercase tracking-tighter hover:bg-amber-500 hover:text-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Подключение...' : 'Запросить вход'}
-                </motion.button>
-              )}
-            </div>
-          </motion.div>
+            {mode === 'join' && (
+              <Button
+                onClick={handleJoin}
+                disabled={loading}
+                variant="secondary"
+                className="w-full border-2 border-amber-500 hover:border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500"
+              >
+                {loading ? 'Подключение...' : 'Запросить вход'}
+              </Button>
+            )}
+          </RoomCard>
         </div>
 
         {/* Ошибка */}
@@ -270,9 +185,6 @@ export default function CreatePage() {
           </motion.div>
         )}
       </div>
-
-      {/* Фоновая текстура */}
-      <div className="fixed inset-0 pointer-events-none opacity-20 contrast-150 mix-blend-overlay z-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM5OTkiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yIDItNCAyLTRzMiAyIDIgNGMwIDItMiA0LTIgNHMtMi0yLTItNHptMC0xNS41YzAtMiAyLTQgMi00czIgMiAyIDRjMCAyLTIgNC0yIDRzLTItMi0yLTR6TTE4IDM0YzAtMiAyLTQgMi00czIgMiAyIDRjMCAyLTIgNC0yIDRzLTItMi0yLTR6bTAtMTUuNWMwLTIgMi00IDItNHMyIDIgMiA0YzAgMi0yIDQtMiA0cy0yLTItMi00eiIvPjwvZz48L2c+PC9zdmc+')]" />
     </div>
   );
 }
