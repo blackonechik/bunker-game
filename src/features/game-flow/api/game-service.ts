@@ -1,10 +1,13 @@
 import { getDataSource } from '@/shared/api/db/data-source';
-import { Apocalypse } from '@/entities/apocalypse';
-import { Location } from '@/entities/location';
-import { Card } from '@/entities/card';
-import { Room } from '@/entities/room';
-import { Player, PlayerCard } from '@/entities/player';
-import { ApocalypseVote, LocationVote, Vote } from '@/entities/vote';
+import { Apocalypse } from '@/lib/entities/Apocalypse';
+import { Location } from '@/lib/entities/Location';
+import { Card } from '@/lib/entities/Card';
+import { Room } from '@/lib/entities/Room';
+import { Player } from '@/lib/entities/Player';
+import { PlayerCard } from '@/lib/entities/PlayerCard';
+import { ApocalypseVote } from '@/lib/entities/ApocalypseVote';
+import { LocationVote } from '@/lib/entities/LocationVote';
+import { Vote } from '@/lib/entities/Vote';
 import { selectRandom } from '@/shared/lib/game';
 import { RoomState, VoteType } from '@/shared/types';
 

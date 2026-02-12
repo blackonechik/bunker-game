@@ -1,7 +1,7 @@
 import { initializeDatabase, getDataSource } from './data-source';
-import { Apocalypse } from '@/entities/apocalypse';
-import { Location } from '@/entities/location';
-import { Card } from '@/entities/card';
+import { Apocalypse } from '@/lib/entities/Apocalypse';
+import { Location } from '@/lib/entities/Location';
+import { Card } from '@/lib/entities/Card';
 import { CardType } from '@/shared/types';
 
 export async function seedDatabase() {

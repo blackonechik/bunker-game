@@ -20,6 +20,9 @@ export class Player {
   @Column({ name: 'is_host', default: false })
   isHost!: boolean;
 
+  @Column({ name: 'is_online', default: true })
+  isOnline!: boolean;
+
   @CreateDateColumn({ name: 'joined_at' })
   joinedAt!: Date;
 

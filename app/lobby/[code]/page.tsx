@@ -4,25 +4,27 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useSocket } from '@/app/providers/socket-provider';
-import { useSocketEvent } from '@/shared/hooks/use-socket';
-import { PlayerDTO, RoomDTO, RoomState } from '@/shared/types';
+import { useSocketEvent, useSocketEmit } from '@/shared/hooks/use-socket';
+import { PlayerDTO, RoomDTO, RoomState, RoomJoinResponse } from '@/shared/types';
 import { useAuthStore } from '@/src/shared/store';
 import { lobbyApi } from '@/src/features/room-management';
 import { LobbyHeader } from '@/src/widgets/lobby-header';
 import { LobbyPlayers } from '@/src/widgets/lobby-players';
 import { LobbyControls } from '@/src/widgets/lobby-controls';
-import { NameModal } from '@/shared/ui';
+import { NameModal, showNotification } from '@/shared/ui';
 
 export default function LobbyPage({ params }: { params: Promise<{ code: string }> }) {
 	const router = useRouter();
 	const { socket, isConnected } = useSocket();
-	const { playerId, playerName, token, _hasHydrated, setName } = useAuthStore();
+	const { emit } = useSocketEmit();
+	const { playerId, playerName, token, _hasHydrated, setAuth } = useAuthStore();
 	const [room, setRoom] = useState<RoomDTO | null>(null);
 	const [players, setPlayers] = useState<PlayerDTO[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [code, setCode] = useState<string>('');
 	const [error, setError] = useState('');
 	const [showNameModal, setShowNameModal] = useState(false);
+	const [joiningRoom, setJoiningRoom] = useState(false);
 
 	const isHost = room?.players?.find((p) => p.id === playerId)?.isHost;
 
@@ -74,16 +76,73 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
 		setPlayers((prev) => [...prev, data.player]);
 	});
 
+	// Подписка на отключение игрока
+	useSocketEvent<{ playerId: number }>('player:offline', (data) => {
+		setPlayers((prev) => prev.map((p) => (p.id === data.playerId ? { ...p, isOnline: false } : p)));
+	});
+
+	// Подписка на удаление игрока
+	useSocketEvent<{ playerId: number }>('player:removed', (data) => {
+		setPlayers((prev) => prev.filter((p) => p.id !== data.playerId));
+	});
+
+	// Подписка на kicked (когда вас удалили)
+	useSocketEvent<{ message: string }>('player:kicked', (data) => {
+		showNotification.error('Удалены из комнаты', data.message);
+		router.push('/');
+	});
+
 	// Подписка на старт игры
 	useSocketEvent<{ state: RoomState }>('game:started', () => {
 		router.push(`/game/${code}`);
 	});
 
-	const handleNameSubmit = (name: string) => {
-		setName(name);
-		setShowNameModal(false);
-		// После установки имени можно присоединиться к комнате
-		// Здесь должна быть логика присоединения через API
+	const handleNameSubmit = async (name: string) => {
+		if (!code) {
+			showNotification.error('Ошибка', 'Код комнаты не найден');
+			return;
+		}
+
+		setJoiningRoom(true);
+
+		try {
+			const result = await emit<RoomJoinResponse>('room:join', {
+				code: code.toUpperCase(),
+				playerName: name.trim(),
+			});
+
+			setAuth(result.token, result.playerId, name.trim());
+			setShowNameModal(false);
+
+			showNotification.success('Успешно', 'Вы присоединились к комнате!');
+
+			// Перезагрузим данные комнаты
+			const response = await lobbyApi.getRoom(code);
+			if (response.success && response.data) {
+				setRoom(response.data.room);
+				setPlayers(response.data.players);
+			}
+		} catch (err: unknown) {
+			const message = err instanceof Error ? err.message : 'Ошибка присоединения к комнате';
+			showNotification.error('Ошибка', message);
+		} finally {
+			setJoiningRoom(false);
+		}
+	};
+
+	const handleKickPlayer = async (targetPlayerId: number) => {
+		if (!token) {
+			showNotification.error('Ошибка', 'Нет доступа');
+			return;
+		}
+
+		try {
+			await emit('player:kick', { token, targetPlayerId });
+			showNotification.success('Успешно', 'Игрок удален из комнаты');
+		} catch (err: unknown) {
+			const message = err instanceof Error ? err.message : 'Ошибка удаления игрока';
+			showNotification.error('Ошибка', message);
+		}
 	};
 
 	const handleStartGame = () => {
@@ -118,7 +177,13 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
 				<div className="max-w-6xl mx-auto px-4 py-8">
 					<LobbyHeader code={code} currentPlayers={players.length} maxPlayers={room?.maxPlayers || 0} />
 
-					<LobbyPlayers players={players} maxPlayers={room?.maxPlayers || 0} currentPlayerId={playerId?.toString() || null} />
+				<LobbyPlayers 
+					players={players} 
+					maxPlayers={room?.maxPlayers || 0} 
+					currentPlayerId={playerId?.toString() || null}
+					isHost={!!isHost}
+					onKickPlayer={handleKickPlayer}
+				/>
 
 					<LobbyControls
 						isHost={!!isHost}
@@ -148,6 +213,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
 			<NameModal
 				isOpen={showNameModal}
 				onSubmit={handleNameSubmit}
+				isLoading={joiningRoom}
 				title="Добро пожаловать в бункер"
 				description="Представьтесь, чтобы присоединиться"
 			/>

@@ -8,9 +8,11 @@ interface LobbyPlayersProps {
 	players: PlayerDTO[];
 	maxPlayers: number;
 	currentPlayerId: string | null;
+	isHost: boolean;
+	onKickPlayer?: (playerId: number) => void;
 }
 
-export function LobbyPlayers({ players, maxPlayers, currentPlayerId }: LobbyPlayersProps) {
+export function LobbyPlayers({ players, maxPlayers, currentPlayerId, isHost, onKickPlayer }: LobbyPlayersProps) {
 	const emptySlots = maxPlayers - players.length;
 
 	return (
@@ -29,7 +31,10 @@ export function LobbyPlayers({ players, maxPlayers, currentPlayerId }: LobbyPlay
 						name={player.name}
 						isHost={player.isHost}
 						isYou={isYou}
+						isOnline={player.isOnline}
 						animationDelay={index * 0.05}
+						canKick={isHost}
+						onKick={() => onKickPlayer?.(player.id)}
 					/>
 				);
 			})}

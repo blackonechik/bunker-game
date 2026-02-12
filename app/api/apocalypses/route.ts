@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { initializeDatabase, getDataSource } from '@/shared/api/db/data-source';
-import { Apocalypse } from '@/entities/apocalypse';
+import { Apocalypse } from '@/lib/entities/Apocalypse';
 
 export async function GET() {
   try {

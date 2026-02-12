@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { initializeDatabase, getDataSource } from '@/shared/api/db/data-source';
-import { Location } from '@/entities/location';
+import { Location } from '@/lib/entities/Location';
 
 export async function GET() {
   try {

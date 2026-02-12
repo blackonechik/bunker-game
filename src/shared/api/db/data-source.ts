@@ -1,13 +1,16 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
-import { Apocalypse } from '@/entities/apocalypse';
-import { Location } from '@/entities/location';
-import { Card } from '@/entities/card';
-import { Room } from '@/entities/room';
-import { Player, PlayerCard } from '@/entities/player';
-import { Session } from '@/entities/session';
-import { Vote, ApocalypseVote, LocationVote } from '@/entities/vote';
-import { ChatMessage } from '@/entities/chat-message';
+import { Apocalypse } from '@/lib/entities/Apocalypse';
+import { Location } from '@/lib/entities/Location';
+import { Card } from '@/lib/entities/Card';
+import { Room } from '@/lib/entities/Room';
+import { Player } from '@/lib/entities/Player';
+import { PlayerCard } from '@/lib/entities/PlayerCard';
+import { Session } from '@/lib/entities/Session';
+import { Vote } from '@/lib/entities/Vote';
+import { ApocalypseVote } from '@/lib/entities/ApocalypseVote';
+import { LocationVote } from '@/lib/entities/LocationVote';
+import { ChatMessage } from '@/lib/entities/ChatMessage';
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
@@ -16,7 +19,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'bunker',
   password: process.env.DB_PASSWORD || 'StrongPass123!',
   database: process.env.DB_DATABASE || 'bunker_game',
-  synchronize: process.env.NODE_ENV === 'development', // только для разработки
+  synchronize: process.env.NODE_ENV === 'development',
   logging: process.env.NODE_ENV === 'development',
   entities: [
     Apocalypse,
@@ -35,13 +38,10 @@ export const AppDataSource = new DataSource({
   subscribers: [],
 });
 
-let isInitialized = false;
-
 export async function initializeDatabase() {
-  if (!isInitialized) {
+  if (!AppDataSource.isInitialized) {
     try {
       await AppDataSource.initialize();
-      isInitialized = true;
       console.log('✅ Database connection established');
     } catch (error) {
       console.error('❌ Error initializing database:', error);
@@ -52,7 +52,7 @@ export async function initializeDatabase() {
 }
 
 export function getDataSource() {
-  if (!isInitialized) {
+  if (!AppDataSource.isInitialized) {
     throw new Error('Database not initialized. Call initializeDatabase() first.');
   }
   return AppDataSource;

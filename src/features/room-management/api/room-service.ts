@@ -1,7 +1,7 @@
 import { getDataSource } from '@/shared/api/db/data-source';
-import { Room } from '@/entities/room';
-import { Player } from '@/entities/player';
-import { Session } from '@/entities/session';
+import { Room } from '@/lib/entities/Room';
+import { Player } from '@/lib/entities/Player';
+import { Session } from '@/lib/entities/Session';
 import { generateRoomCode } from '@/shared/lib/game';
 import { generateToken } from '@/shared/lib/jwt';
 import { RoomState } from '@/shared/types';
@@ -149,5 +149,54 @@ export class RoomService {
     const roomRepo = ds.getRepository(Room);
     
     await roomRepo.update(roomId, { state });
+  }
+
+  static async setPlayerOnline(playerId: number, isOnline: boolean) {
+    const ds = getDataSource();
+    const playerRepo = ds.getRepository(Player);
+    
+    await playerRepo.update(playerId, { isOnline });
+    
+    const player = await playerRepo.findOne({
+      where: { id: playerId },
+      relations: ['room'],
+    });
+    
+    return player;
+  }
+
+  static async removePlayer(playerId: number, hostPlayerId: number) {
+    const ds = getDataSource();
+    const playerRepo = ds.getRepository(Player);
+    const sessionRepo = ds.getRepository(Session);
+    
+    const player = await playerRepo.findOne({
+      where: { id: playerId },
+      relations: ['room'],
+    });
+    
+    if (!player) {
+      throw new Error('Игрок не найден');
+    }
+    
+    const host = await playerRepo.findOne({
+      where: { id: hostPlayerId },
+    });
+    
+    if (!host || !host.isHost || host.roomId !== player.roomId) {
+      throw new Error('Только владелец комнаты может удалять игроков');
+    }
+    
+    if (player.isHost) {
+      throw new Error('Нельзя удалить владельца комнаты');
+    }
+    
+    // Удаляем сессию
+    await sessionRepo.delete({ playerId });
+    
+    // Удаляем игрока
+    await playerRepo.remove(player);
+    
+    return { roomId: player.roomId, playerId };
   }
 }

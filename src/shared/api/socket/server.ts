@@ -26,6 +26,7 @@ export type NextApiResponseWithSocket = NextApiResponse & {
 
 export class SocketServer {
   private io: SocketIOServer;
+  private playerSockets: Map<number, string> = new Map(); // playerId -> socketId
 
   constructor(io: SocketIOServer) {
     this.io = io;
@@ -47,6 +48,9 @@ export class SocketServer {
 
           // Присоединяем к комнате
           socket.join(`room:${room.code}`);
+
+          // Регистрируем связь playerId с socketId
+          this.playerSockets.set(player.id, socket.id);
 
           callback({
             success: true,
@@ -80,6 +84,9 @@ export class SocketServer {
 
           // Присоединяем к комнате
           socket.join(`room:${room.code}`);
+
+          // Регистрируем связь playerId с socketId
+          this.playerSockets.set(player.id, socket.id);
 
           callback({
             success: true,
@@ -307,9 +314,82 @@ export class SocketServer {
         }
       });
 
+      // УДАЛЕНИЕ ИГРОКА (хостом)
+      socket.on('player:kick', async (data: { token: string; targetPlayerId: number }, callback) => {
+        try {
+          const payload = verifyToken(data.token);
+
+          // Получаем информацию о игроке ДО удаления
+          const player = await RoomService.getPlayerById(data.targetPlayerId);
+          if (!player) {
+            throw new Error('Игрок не найден');
+          }
+
+          const room = await RoomService.getRoomByCode(player.room.code);
+          if (!room) {
+            throw new Error('Комната не найдена');
+          }
+
+          // Получаем socketId ДО удаления из Map
+          const targetSocketId = this.playerSockets.get(data.targetPlayerId);
+
+          // Теперь удаляем игрока из БД
+          await RoomService.removePlayer(data.targetPlayerId, payload.playerId);
+
+          // Получаем обновленный список игроков
+          const players = await RoomService.getPlayers(room.id);
+
+          // Уведомляем удаленного игрока
+          if (targetSocketId) {
+            this.io.to(targetSocketId).emit('player:kicked', { message: 'Вы были удалены из комнаты' });
+          }
+
+          // Уведомляем всех в комнате
+          this.io.to(`room:${room.code}`).emit('player:removed', { playerId: data.targetPlayerId });
+          this.io.to(`room:${room.code}`).emit('room:update', { room, players });
+
+          // Удаляем из Map ПОСЛЕ отправки уведомлений
+          this.playerSockets.delete(data.targetPlayerId);
+
+          callback({ success: true });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Ошибка удаления игрока';
+          callback({ success: false, error: message });
+        }
+      });
+
       // ОТКЛЮЧЕНИЕ
-      socket.on('disconnect', () => {
+      socket.on('disconnect', async () => {
         console.log('Client disconnected:', socket.id);
+
+        // Находим playerId по socketId
+        let disconnectedPlayerId: number | null = null;
+        for (const [playerId, socketId] of this.playerSockets.entries()) {
+          if (socketId === socket.id) {
+            disconnectedPlayerId = playerId;
+            break;
+          }
+        }
+
+        if (disconnectedPlayerId) {
+          try {
+            // Помечаем игрока как offline
+            const player = await RoomService.setPlayerOnline(disconnectedPlayerId, false);
+
+            if (player && player.room) {
+              const players = await RoomService.getPlayers(player.room.id);
+              
+              // Уведомляем всех в комнате
+              this.io.to(`room:${player.room.code}`).emit('player:offline', { playerId: disconnectedPlayerId });
+              this.io.to(`room:${player.room.code}`).emit('room:update', { room: player.room, players });
+            }
+
+            // Удаляем из Map
+            this.playerSockets.delete(disconnectedPlayerId);
+          } catch (error) {
+            console.error('Error handling disconnect:', error);
+          }
+        }
       });
     });
   }

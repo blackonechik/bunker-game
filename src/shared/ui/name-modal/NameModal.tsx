@@ -10,6 +10,7 @@ interface NameModalProps {
 	onSubmit: (name: string) => void;
 	title?: string;
 	description?: string;
+	isLoading?: boolean;
 }
 
 export function NameModal({
@@ -17,13 +18,16 @@ export function NameModal({
 	onSubmit,
 	title = 'Добро пожаловать в бункер',
 	description = 'Представьтесь, чтобы продолжить',
+	isLoading = false,
 }: NameModalProps) {
 	const [name, setName] = useState('');
 	const [error, setError] = useState('');
 
 	const handleSubmit = () => {
+		if (isLoading) return;
+
 		const trimmedName = name.trim();
-		
+
 		if (!trimmedName) {
 			setError('Имя не может быть пустым');
 			return;
@@ -43,7 +47,7 @@ export function NameModal({
 	};
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
-		if (e.key === 'Enter') {
+		if (e.key === 'Enter' && !isLoading) {
 			handleSubmit();
 		}
 	};
@@ -81,6 +85,7 @@ export function NameModal({
 								maxLength={20}
 								autoFocus
 								onKeyPress={handleKeyPress}
+								disabled={isLoading}
 							/>
 
 							{error && (
@@ -94,8 +99,8 @@ export function NameModal({
 							)}
 
 							<div className="w-full">
-								<Button onClick={handleSubmit} variant="primary" size="large" disabled={!name.trim()}>
-									Продолжить
+								<Button onClick={handleSubmit} variant="primary" size="large" disabled={!name.trim() || isLoading}>
+									{isLoading ? 'Подключение...' : 'Продолжить'}
 								</Button>
 							</div>
 						</div>

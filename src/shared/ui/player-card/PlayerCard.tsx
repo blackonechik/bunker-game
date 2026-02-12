@@ -6,19 +6,36 @@ interface PlayerCardProps {
 	name: string;
 	isHost: boolean;
 	isYou: boolean;
+	isOnline: boolean;
 	animationDelay?: number;
+	onKick?: () => void;
+	canKick?: boolean;
 }
 
-export function PlayerCard({ name, isHost, isYou, animationDelay = 0 }: PlayerCardProps) {
+export function PlayerCard({ name, isHost, isYou, isOnline, animationDelay = 0, onKick, canKick }: PlayerCardProps) {
 	return (
 		<motion.div
 			initial={{ opacity: 0, scale: 0.8 }}
 			animate={{ opacity: 1, scale: 1 }}
 			transition={{ delay: animationDelay }}
-			className={`p-4 border-2 ${
+			className={`relative p-4 border-2 ${
 				isYou ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900'
-			} flex flex-col items-center gap-2`}
+			} flex flex-col items-center gap-2 ${!isOnline ? 'opacity-50' : ''}`}
 		>
+			{/* Индикатор онлайн */}
+			<div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-red-500'}`} />
+
+			{/* Кнопка удаления */}
+			{canKick && !isYou && !isHost && (
+				<button
+					onClick={onKick}
+					className="absolute top-2 left-2 w-5 h-5 bg-red-600 text-white rounded-sm flex items-center justify-center hover:bg-red-700 transition-colors text-xs font-bold"
+					title="Удалить игрока"
+				>
+					×
+				</button>
+			)}
+
 			<div
 				className={`w-12 h-12 ${
 					isYou ? 'bg-emerald-500' : 'bg-zinc-800'
@@ -30,6 +47,7 @@ export function PlayerCard({ name, isHost, isYou, animationDelay = 0 }: PlayerCa
 			</div>
 			<span className="text-xs font-bold uppercase truncate w-full text-center">{name}</span>
 			{isHost && <span className="text-[10px] text-amber-500 font-bold uppercase">Владелец бункера</span>}
+			{!isOnline && <span className="text-[10px] text-red-500 font-bold uppercase">Оффлайн</span>}
 		</motion.div>
 	);
 }
