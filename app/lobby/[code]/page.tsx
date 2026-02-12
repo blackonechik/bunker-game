@@ -38,7 +38,13 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
   }, [params]);
 
   useEffect(() => {
-    if (!code || isPending) return;
+    if (!isConnected) {
+      resumeAttemptedRef.current = false;
+    }
+  }, [isConnected]);
+
+  useEffect(() => {
+    if (!code || isPending || !isConnected) return;
 
     if (!session) {
       signIn.social({ provider: 'google', callbackURL: `/lobby/${code}` });
@@ -71,6 +77,16 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
           const message = err instanceof Error ? err.message : 'Ошибка присоединения к комнате';
           showNotification.error('Ошибка', message);
         }
+      }
+
+      try {
+        const response = await lobbyApi.getRoom(code);
+        if (!cancelled && response.success && response.data) {
+          setRoom(response.data.room);
+          setPlayers(response.data.players);
+        }
+      } catch {
+        // ignore sync errors, socket updates will still arrive
       } finally {
         if (!cancelled) {
           setShowNameModal(false);
@@ -84,7 +100,17 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
     return () => {
       cancelled = true;
     };
-  }, [code, emit, isPending, joiningRoom, playerName, session]);
+  }, [code, emit, isConnected, isPending, joiningRoom, playerName, session]);
+
+  useEffect(() => {
+    if (!isConnected || !sessionUserId) return;
+
+    setPlayers((prev) =>
+      prev.map((player) =>
+        player.userId === sessionUserId ? { ...player, isOnline: true } : player
+      )
+    );
+  }, [isConnected, sessionUserId]);
 
   useEffect(() => {
     if (!code) return;
@@ -143,6 +169,11 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
   const handleNameSubmit = async (name: string) => {
     if (!code) {
       showNotification.error('Ошибка', 'Код комнаты не найден');
+      return;
+    }
+
+    if (!isConnected) {
+      showNotification.error('Ошибка подключения', 'Сокет еще не подключен, повторите через секунду');
       return;
     }
 

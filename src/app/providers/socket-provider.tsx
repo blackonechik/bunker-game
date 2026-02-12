@@ -13,35 +13,36 @@ const SocketContext = createContext<SocketContextType>({
   isConnected: false,
 });
 
-let socketInstance: Socket | null = null;
+const socketInstance: Socket = io(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', {
+  path: '/api/socket',
+  addTrailingSlash: false,
+  withCredentials: true,
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 500,
+  reconnectionDelayMax: 3000,
+});
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(socketInstance.connected);
 
   useEffect(() => {
-    if (!socketInstance) {
-      socketInstance = io(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', {
-        path: '/api/socket',
-        addTrailingSlash: false,
-        withCredentials: true,
-      });
+    const handleConnect = () => {
+      console.log('Socket connected');
+      setIsConnected(true);
+    };
 
-      socketInstance.on('connect', () => {
-        console.log('Socket connected');
-        setIsConnected(true);
-      });
+    const handleDisconnect = () => {
+      console.log('Socket disconnected');
+      setIsConnected(false);
+    };
 
-      socketInstance.on('disconnect', () => {
-        console.log('Socket disconnected');
-        setIsConnected(false);
-      });
-    }
+    socketInstance.on('connect', handleConnect);
+    socketInstance.on('disconnect', handleDisconnect);
 
     return () => {
-      if (socketInstance) {
-        socketInstance.disconnect();
-        socketInstance = null;
-      }
+      socketInstance.off('connect', handleConnect);
+      socketInstance.off('disconnect', handleDisconnect);
     };
   }, []);
 

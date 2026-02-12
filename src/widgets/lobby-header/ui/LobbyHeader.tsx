@@ -33,7 +33,7 @@ export function LobbyHeader({ code, currentPlayers, maxPlayers }: LobbyHeaderPro
 				</p>
 			</div>
 
-			<Button onClick={handleCopy} variant="secondary" size="medium">
+			<Button onClick={handleCopy} variant="secondary" size="small">
 				{copied ? '✓ Скопировано' : `ID: ${code} • Нажми, чтобы скопировать`}
 			</Button>
 		</motion.div>

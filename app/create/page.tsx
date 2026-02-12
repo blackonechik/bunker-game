@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { signIn, useSession } from '@/shared/lib/auth-client';
 import { useSocketEmit } from '@/shared/hooks/use-socket';
-import { Button, Logo, RoomCard, TextInput, RangeSlider, CodeInput, showNotification } from '@/src/shared/ui';
+import { Button, Logo, RoomCard, RangeSlider, CodeInput, showNotification } from '@/src/shared/ui';
 import type { RoomCreateResponse, RoomJoinResponse } from '@/src/shared/types';
 
 export default function CreatePage() {
@@ -13,16 +13,9 @@ export default function CreatePage() {
   const { emit } = useSocketEmit();
   const { data: session, isPending } = useSession();
   const [mode, setMode] = useState<'create' | 'join'>('create');
-  const [playerName, setPlayerName] = useState('');
   const [maxPlayers, setMaxPlayers] = useState(10);
   const [roomCode, setRoomCode] = useState(['', '', '', '']);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (session?.user?.name && !playerName) {
-      setPlayerName(session.user.name);
-    }
-  }, [session?.user?.name, playerName]);
 
   const handleCreate = async () => {
     if (!session) {
@@ -30,10 +23,10 @@ export default function CreatePage() {
       return;
     }
 
-    const trimmedName = playerName.trim() || session.user.name?.trim() || '';
+    const trimmedName = session.user.name?.trim() || '';
 
     if (!trimmedName) {
-      showNotification.error('Ошибка валидации', 'Введите имя игрока');
+      showNotification.error('Ошибка профиля', 'Не удалось получить имя из профиля Google');
       return;
     }
 
@@ -65,10 +58,10 @@ export default function CreatePage() {
     }
 
     const code = roomCode.join('');
-    const trimmedName = playerName.trim() || session.user.name?.trim() || '';
+    const trimmedName = session.user.name?.trim() || '';
     
     if (!trimmedName) {
-      showNotification.error('Ошибка валидации', 'Введите имя игрока');
+      showNotification.error('Ошибка профиля', 'Не удалось получить имя из профиля Google');
       return;
     }
 
@@ -126,16 +119,6 @@ export default function CreatePage() {
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {/* Создать комнату */}
           <RoomCard mode="create" isActive={mode === 'create'} onFocus={() => setMode('create')} delay={0.2}>
-            <TextInput
-              label="Ваше имя"
-              variant="emerald"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              onFocus={() => setMode('create')}
-              maxLength={20}
-              placeholder={session?.user?.name || 'Войдите через Google'}
-            />
-
             <RangeSlider
               label={`Игроков: ${maxPlayers}`}
               variant="emerald"
@@ -161,16 +144,6 @@ export default function CreatePage() {
 
           {/* Присоединиться к убежищу */}
           <RoomCard mode="join" isActive={mode === 'join'} onFocus={() => setMode('join')} delay={0.3}>
-            <TextInput
-              label="Ваше имя"
-              variant="amber"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              onFocus={() => setMode('join')}
-              maxLength={20}
-              placeholder={session?.user?.name || 'Войдите через Google'}
-            />
-
             <CodeInput
               label="Код доступа"
               variant="amber"
