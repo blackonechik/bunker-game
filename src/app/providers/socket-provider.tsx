@@ -17,10 +17,14 @@ const socketInstance: Socket = io(process.env.NEXT_PUBLIC_APP_URL || 'http://loc
   path: '/api/socket',
   addTrailingSlash: false,
   withCredentials: true,
+  transports: ['polling', 'websocket'],
+  upgrade: true,
+  rememberUpgrade: true,
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 500,
   reconnectionDelayMax: 3000,
+  timeout: 10000,
 });
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {

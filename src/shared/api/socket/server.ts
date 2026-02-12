@@ -8,8 +8,10 @@ import { RoomService } from '@/src/features/room-management/api/room-service';
 import { GameService } from '@/features/game-flow';
 import { auth } from '@/auth';
 import {
+  ApocalypseDTO,
   RoomCreatePayload,
   RoomJoinPayload,
+  LocationDTO,
   VoteApocalypsePayload,
   VoteLocationPayload,
   VotePlayerPayload,
@@ -29,6 +31,8 @@ export class SocketServer {
   private io: SocketIOServer;
   private playerSockets: Map<number, string> = new Map();
   private socketPlayers: Map<string, number> = new Map();
+  private roomApocalypseOptions: Map<number, ApocalypseDTO[]> = new Map();
+  private roomLocationOptions: Map<number, LocationDTO[]> = new Map();
 
   constructor(io: SocketIOServer) {
     this.io = io;
@@ -248,9 +252,94 @@ export class SocketServer {
           this.io.to(`room:${room.code}`).emit('player:online', { playerId: player.id });
           this.io.to(`room:${room.code}`).emit('room:update', { room, players });
 
+          if (room.state === RoomState.APOCALYPSE_VOTE) {
+            let apocalypses = this.roomApocalypseOptions.get(room.id);
+            if (!apocalypses || apocalypses.length === 0) {
+              apocalypses = await GameService.getRandomApocalypses(3);
+              this.roomApocalypseOptions.set(room.id, apocalypses);
+            }
+
+            if (apocalypses.length > 0) {
+              socket.emit('apocalypse:options', { apocalypses });
+            }
+          }
+
+          if (room.state === RoomState.LOCATION_VOTE) {
+            let locations = this.roomLocationOptions.get(room.id);
+            if (!locations || locations.length === 0) {
+              locations = await GameService.getRandomLocations(3);
+              this.roomLocationOptions.set(room.id, locations);
+            }
+
+            if (locations.length > 0) {
+              socket.emit('location:options', { locations });
+            }
+          }
+
           callback({ success: true, data: { room, players, playerId: player.id } });
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Ошибка восстановления подключения';
+          callback({ success: false, error: message });
+        }
+      });
+
+      socket.on('vote:options:sync', async (data: { code?: string }, callback) => {
+        try {
+          const userId = socket.data.userId as string;
+
+          let player = await this.getConnectedPlayer(socket).catch(() => null);
+
+          if (!player) {
+            const roomCode = data?.code?.trim()?.toUpperCase();
+            if (!roomCode) {
+              throw new Error('Не удалось определить комнату для синхронизации');
+            }
+
+            const restoredPlayer = await RoomService.getPlayerByUserAndRoomCode(userId, roomCode);
+            if (!restoredPlayer?.room) {
+              throw new Error('Игрок не найден в этой комнате');
+            }
+
+            socket.join(`room:${restoredPlayer.room.code}`);
+            await this.bindSocketToPlayer(restoredPlayer.id, socket.id);
+            await RoomService.setPlayerOnline(restoredPlayer.id, true);
+
+            player = await RoomService.getPlayerById(restoredPlayer.id);
+          }
+
+          if (!player) {
+            throw new Error('Игрок не найден');
+          }
+
+          const room = await RoomService.getRoom(player.roomId);
+
+          if (!room) {
+            throw new Error('Комната не найдена');
+          }
+
+          let apocalypses = this.roomApocalypseOptions.get(room.id) || [];
+          let locations = this.roomLocationOptions.get(room.id) || [];
+
+          if (room.state === RoomState.APOCALYPSE_VOTE && apocalypses.length === 0) {
+            apocalypses = await GameService.getRandomApocalypses(3);
+            this.roomApocalypseOptions.set(room.id, apocalypses);
+          }
+
+          if (room.state === RoomState.LOCATION_VOTE && locations.length === 0) {
+            locations = await GameService.getRandomLocations(3);
+            this.roomLocationOptions.set(room.id, locations);
+          }
+
+          callback({
+            success: true,
+            data: {
+              state: room.state,
+              apocalypses,
+              locations,
+            },
+          });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Ошибка синхронизации вариантов голосования';
           callback({ success: false, error: message });
         }
       });
@@ -274,13 +363,17 @@ export class SocketServer {
           await GameService.startGame(room.id);
 
           const apocalypses = await GameService.getRandomApocalypses(3);
+          this.roomApocalypseOptions.set(room.id, apocalypses);
 
           callback({ success: true });
 
           this.io.to(`room:${room.code}`).emit('game:started', {
             state: RoomState.APOCALYPSE_VOTE,
           });
-          this.io.to(`room:${room.code}`).emit('apocalypse:options', { apocalypses });
+
+          setTimeout(() => {
+            this.io.to(`room:${room.code}`).emit('apocalypse:options', { apocalypses });
+          }, 1200);
 
           setTimeout(async () => {
             try {
@@ -343,6 +436,7 @@ export class SocketServer {
 
           if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === players.length) {
             const winnerId = parseInt(votes[0].apocalypseId);
+            this.roomApocalypseOptions.delete(room.id);
 
             this.io.to(`room:${room.code}`).emit('voting:apocalypse:complete', {
               winnerId,
@@ -352,6 +446,7 @@ export class SocketServer {
             setTimeout(async () => {
               await RoomService.updateRoomState(room.id, RoomState.LOCATION_VOTE);
               const locations = await GameService.getRandomLocations(3);
+              this.roomLocationOptions.set(room.id, locations);
 
               this.io.to(`room:${room.code}`).emit('location:options', { locations });
 
@@ -389,6 +484,7 @@ export class SocketServer {
 
           if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === players.length) {
             const winnerId = parseInt(votes[0].locationId);
+            this.roomLocationOptions.delete(room.id);
 
             this.io.to(`room:${room.code}`).emit('voting:location:complete', {
               winnerId,

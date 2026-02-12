@@ -70,12 +70,24 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   }, [code]);
 
   // Socket события
+  useSocketEvent<{ room: RoomDTO; players: PlayerDTO[] }>('room:update', (data) => {
+    setRoom(data.room);
+    setPlayers(data.players);
+  });
+
+  useSocketEvent<{ state: RoomState }>('game:started', (data) => {
+    setRoom(prev => (prev ? { ...prev, state: data.state, currentRound: 0 } : prev));
+    addSystemMessage('Игра началась. Голосование за апокалипсис...');
+  });
+
   useSocketEvent<{ apocalypses: ApocalypseDTO[] }>('apocalypse:options', (data) => {
+    setRoom(prev => (prev ? { ...prev, state: RoomState.APOCALYPSE_VOTE } : prev));
     setApocalypseOptions(data.apocalypses);
     addSystemMessage('Выберите тип апокалипсиса...');
   });
 
   useSocketEvent<{ locations: LocationDTO[] }>('location:options', (data) => {
+    setRoom(prev => (prev ? { ...prev, state: RoomState.LOCATION_VOTE } : prev));
     setLocationOptions(data.locations);
     addSystemMessage('Выберите локацию бункера...');
   });
@@ -86,6 +98,8 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
       setApocalypse(winner);
       addSystemMessage(`Апокалипсис определен: ${winner.name}`);
     }
+
+    setApocalypseOptions([]);
   });
 
   useSocketEvent<{ winnerId: number }>('voting:location:complete', (data) => {
@@ -94,6 +108,8 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
       setLocation(winner);
       addSystemMessage(`Локация определена: ${winner.name}`);
     }
+
+    setLocationOptions([]);
   });
 
   useSocketEvent<{ round: number; state: RoomState }>('game:round_start', (data) => {
