@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { useSession } from '@/shared/lib/auth-client';
 import { useSocket } from '@/app/providers/socket-provider';
 import { useSocketEvent } from '@/shared/hooks/use-socket';
 import { PlayerDTO, RoomDTO, RoomState, ChatMessageDTO, ApocalypseDTO, LocationDTO } from '@/shared/types';
@@ -13,6 +14,7 @@ import { PlayerList } from '@/widgets/player-list';
 export default function GamePage({ params }: { params: Promise<{ code: string }> }) {
   const router = useRouter();
   const { socket, isConnected } = useSocket();
+  const { data: session } = useSession();
   
   const [code, setCode] = useState<string>('');
   const [room, setRoom] = useState<RoomDTO | null>(null);
@@ -23,9 +25,10 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   const [location, setLocation] = useState<LocationDTO | null>(null);
   const [apocalypseOptions, setApocalypseOptions] = useState<ApocalypseDTO[]>([]);
   const [locationOptions, setLocationOptions] = useState<LocationDTO[]>([]);
-
-  const playerId = typeof window !== 'undefined' ? parseInt(localStorage.getItem('bunker_player_id') || '0') : 0;
-  const currentPlayer = players.find(p => p.id === playerId);
+  const sessionUserId = session?.user?.id ?? null;
+  const sessionPlayer = players.find(p => p.userId === sessionUserId) ?? null;
+  const playerId = sessionPlayer?.id ?? 0;
+  const currentPlayer = sessionPlayer;
 
   // Helper для добавления системных сообщений
   const addSystemMessage = useCallback((message: string) => {
@@ -157,10 +160,9 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   };
 
   const handleVoteApocalypse = (apocalypseId: number) => {
-    const token = localStorage.getItem('bunker_token');
-    if (!socket || !token) return;
+    if (!socket) return;
 
-    socket.emit('vote:apocalypse', { apocalypseId, token }, (res: { success: boolean; error?: string }) => {
+    socket.emit('vote:apocalypse', { apocalypseId }, (res: { success: boolean; error?: string }) => {
       if (!res.success) {
         addSystemMessage(`Ошибка: ${res.error}`);
       }
@@ -168,10 +170,9 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   };
 
   const handleVoteLocation = (locationId: number) => {
-    const token = localStorage.getItem('bunker_token');
-    if (!socket || !token) return;
+    if (!socket) return;
 
-    socket.emit('vote:location', { locationId, token }, (res: { success: boolean; error?: string }) => {
+    socket.emit('vote:location', { locationId }, (res: { success: boolean; error?: string }) => {
       if (!res.success) {
         addSystemMessage(`Ошибка: ${res.error}`);
       }
@@ -179,10 +180,9 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   };
 
   const handleRevealCard = (cardId: number) => {
-    const token = localStorage.getItem('bunker_token');
-    if (!socket || !token) return;
+    if (!socket) return;
 
-    socket.emit('card:reveal', { cardId, token }, (res: { success: boolean; error?: string }) => {
+    socket.emit('card:reveal', { cardId }, (res: { success: boolean; error?: string }) => {
       if (!res.success) {
         addSystemMessage(`Ошибка: ${res.error}`);
       }
@@ -190,10 +190,9 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   };
 
   const handleVotePlayer = (targetPlayerId: number) => {
-    const token = localStorage.getItem('bunker_token');
-    if (!socket || !token) return;
+    if (!socket) return;
 
-    socket.emit('vote:player', { targetPlayerId, token }, (res: { success: boolean; error?: string }) => {
+    socket.emit('vote:player', { targetPlayerId }, (res: { success: boolean; error?: string }) => {
       if (!res.success) {
         addSystemMessage(`Ошибка: ${res.error}`);
       }

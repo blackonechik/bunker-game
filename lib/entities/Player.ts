@@ -8,6 +8,9 @@ export class Player {
   @PrimaryGeneratedColumn()
   id!: number;
 
+  @Column({ name: 'user_id', length: 255 })
+  userId!: string;
+
   @Column({ length: 50 })
   name!: string;
 

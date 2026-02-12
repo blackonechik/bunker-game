@@ -64,6 +64,7 @@ export interface ChatMessagePayload {
 // Интерфейсы для данных
 export interface PlayerDTO {
   id: number;
+  userId: string;
   name: string;
   isAlive: boolean;
   isHost: boolean;
@@ -139,12 +140,10 @@ export interface RoomCreateResponse {
   code: string;
   roomId: number;
   playerId: number;
-  token: string;
 }
 
 export interface RoomJoinResponse {
   roomId: number;
   playerId: number;
-  token: string;
 }
 

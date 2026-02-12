@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { headers } from 'next/headers';
+import { auth } from '@/auth';
 import { initializeDatabase } from '@/shared/api/db/data-source';
 import { RoomService } from '@/src/features/room-management/api/room-service';
 
@@ -8,6 +10,14 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { maxPlayers, hardcore, playerName } = body;
+
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Требуется авторизация' },
+        { status: 401 }
+      );
+    }
 
     if (!playerName || playerName.trim().length === 0) {
       return NextResponse.json(
@@ -23,7 +33,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await RoomService.createRoom(maxPlayers, hardcore || false, playerName);
+    const result = await RoomService.createRoom(maxPlayers, hardcore || false, playerName, session.user.id);
 
     return NextResponse.json({
       success: true,
@@ -31,14 +41,14 @@ export async function POST(request: NextRequest) {
         code: result.room.code,
         roomId: result.room.id,
         playerId: result.player.id,
-        token: result.token,
         shareLink: `${process.env.NEXT_PUBLIC_APP_URL}/join/${result.room.code}`,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating room:', error);
+    const message = error instanceof Error ? error.message : 'Ошибка создания комнаты';
     return NextResponse.json(
-      { error: error.message || 'Ошибка создания комнаты' },
+      { error: message },
       { status: 500 }
     );
   }

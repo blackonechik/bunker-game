@@ -13,7 +13,7 @@
 - **Database:** MySQL + TypeORM
 - **Styling:** TailwindCSS v4
 - **Animation:** Framer Motion
-- **Auth:** JWT
+- **Auth:** Better Auth (Google OAuth)
 
 ## 📁 Структура Проекта
 
@@ -71,8 +71,11 @@ DB_USERNAME=root
 DB_PASSWORD=your_password
 DB_DATABASE=bunker_game
 
-# JWT
-JWT_SECRET=your_super_secret_jwt_key_change_this
+# Better Auth
+BETTER_AUTH_SECRET=replace_with_openssl_rand_base64_32
+BETTER_AUTH_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000

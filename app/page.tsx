@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useSession } from '@/shared/lib/auth-client';
 import { LoadingDoors } from '@/shared/ui/loading-doors';
 import { BackgroundVideo } from '@/shared/ui/background-video';
 import { MusicButton } from '@/shared/ui/music-button';
 import { StartScreen } from '@/widgets/start-screen';
 import { MainMenu } from '@/widgets/main-menu';
-import { useAuthStore } from '@/src/shared/store';
 
 export default function Home() {
-  const { isValid, _hasHydrated } = useAuthStore();
+  const { data: session, isPending } = useSession();
   const [showStart, setShowStart] = useState(false);
   const [showDoors, setShowDoors] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -18,10 +18,10 @@ export default function Home() {
   const doorAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    if (!_hasHydrated) return;
+    if (isPending) return;
     
     const timer = setTimeout(() => {
-      const hasAuth = isValid();
+      const hasAuth = Boolean(session);
       if (hasAuth) {
         setShowMenu(true);
       } else {
@@ -30,7 +30,7 @@ export default function Home() {
     }, 0);
     
     return () => clearTimeout(timer);
-  }, [_hasHydrated, isValid]);
+  }, [isPending, session]);
 
   const handleStart = () => {
     setShowStart(false);

@@ -1,25 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { signIn, useSession } from '@/shared/lib/auth-client';
 import { useSocketEmit } from '@/shared/hooks/use-socket';
 import { Button, Logo, RoomCard, TextInput, RangeSlider, CodeInput, showNotification } from '@/src/shared/ui';
-import { useAuthStore } from '@/src/shared/store';
 import type { RoomCreateResponse, RoomJoinResponse } from '@/src/shared/types';
 
 export default function CreatePage() {
   const router = useRouter();
   const { emit } = useSocketEmit();
-  const { setAuth } = useAuthStore();
+  const { data: session, isPending } = useSession();
   const [mode, setMode] = useState<'create' | 'join'>('create');
   const [playerName, setPlayerName] = useState('');
   const [maxPlayers, setMaxPlayers] = useState(10);
   const [roomCode, setRoomCode] = useState(['', '', '', '']);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (session?.user?.name && !playerName) {
+      setPlayerName(session.user.name);
+    }
+  }, [session?.user?.name, playerName]);
+
   const handleCreate = async () => {
-    if (!playerName.trim()) {
+    if (!session) {
+      await signIn.social({ provider: 'google', callbackURL: '/create' });
+      return;
+    }
+
+    const trimmedName = playerName.trim() || session.user.name?.trim() || '';
+
+    if (!trimmedName) {
       showNotification.error('Ошибка валидации', 'Введите имя игрока');
       return;
     }
@@ -30,10 +43,8 @@ export default function CreatePage() {
       const result = await emit<RoomCreateResponse>('room:create', {
         maxPlayers,
         hardcore: false,
-        playerName: playerName.trim(),
+        playerName: trimmedName,
       });
-
-      setAuth(result.token, result.playerId, playerName.trim());
 
       showNotification.success('Комната создана', `Код доступа: ${result.code}`);
 
@@ -48,9 +59,15 @@ export default function CreatePage() {
   };
 
   const handleJoin = async () => {
+    if (!session) {
+      await signIn.social({ provider: 'google', callbackURL: '/create' });
+      return;
+    }
+
     const code = roomCode.join('');
+    const trimmedName = playerName.trim() || session.user.name?.trim() || '';
     
-    if (!playerName.trim()) {
+    if (!trimmedName) {
       showNotification.error('Ошибка валидации', 'Введите имя игрока');
       return;
     }
@@ -63,17 +80,17 @@ export default function CreatePage() {
     setLoading(true);
 
     try {
-      const result = await emit<RoomJoinResponse>('room:join', {
-        code: code.toUpperCase(),
-        playerName: playerName.trim(),
-      });
+      const normalizedCode = code.toUpperCase();
 
-      setAuth(result.token, result.playerId, playerName.trim());
+      await emit<RoomJoinResponse>('room:join', {
+        code: normalizedCode,
+        playerName: trimmedName,
+      });
 
       showNotification.success('Подключение успешно', 'Добро пожаловать в убежище!');
 
       // Переходим в лобби
-      router.push(`/lobby/${code.toUpperCase()}`);
+      router.push(`/lobby/${normalizedCode}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Ошибка входа в комнату';
       showNotification.error('Ошибка', message);
@@ -116,7 +133,7 @@ export default function CreatePage() {
               onChange={(e) => setPlayerName(e.target.value)}
               onFocus={() => setMode('create')}
               maxLength={20}
-              placeholder="STALKER_01"
+              placeholder={session?.user?.name || 'Войдите через Google'}
             />
 
             <RangeSlider
@@ -136,7 +153,7 @@ export default function CreatePage() {
                 variant="primary"
                 className="w-full"
               >
-                {loading ? 'Создание...' : 'Сгенерировать код'}
+                {loading ? 'Создание...' : session ? 'Сгенерировать код' : 'Войти через Google'}
               </Button>
             )}
           </RoomCard>
@@ -151,7 +168,7 @@ export default function CreatePage() {
               onChange={(e) => setPlayerName(e.target.value)}
               onFocus={() => setMode('join')}
               maxLength={20}
-              placeholder="SURVIVOR_92"
+              placeholder={session?.user?.name || 'Войдите через Google'}
             />
 
             <CodeInput
@@ -169,12 +186,18 @@ export default function CreatePage() {
                 variant="secondary"
                 className="w-full border-2 border-amber-500 hover:border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500"
               >
-                {loading ? 'Подключение...' : 'Запросить вход'}
+                {loading ? 'Подключение...' : session ? 'Запросить вход' : 'Войти через Google'}
               </Button>
             )}
           </RoomCard>
         </div>
       </div>
+
+      {isPending && (
+        <div className="fixed top-4 right-4 px-3 py-1 text-xs border border-zinc-700 bg-zinc-900 text-zinc-400 uppercase">
+          Проверка сессии...
+        </div>
+      )}
     </div>
   );
 }

@@ -1,11 +1,11 @@
 import { Server as NetServer } from 'http';
-import { Server as SocketIOServer } from 'socket.io';
+import { Server as SocketIOServer, Socket } from 'socket.io';
 import { NextApiRequest } from 'next';
 import { NextApiResponse } from 'next';
 import { initializeDatabase } from '../db/data-source';
 import { RoomService } from '@/src/features/room-management/api/room-service';
 import { GameService } from '@/features/game-flow';
-import { verifyToken } from '@/shared/lib/jwt';
+import { auth } from '@/auth';
 import {
   RoomCreatePayload,
   RoomJoinPayload,
@@ -26,31 +26,106 @@ export type NextApiResponseWithSocket = NextApiResponse & {
 
 export class SocketServer {
   private io: SocketIOServer;
-  private playerSockets: Map<number, string> = new Map(); // playerId -> socketId
+  private playerSockets: Map<number, string> = new Map();
+  private socketPlayers: Map<string, number> = new Map();
 
   constructor(io: SocketIOServer) {
     this.io = io;
+    this.setupAuthMiddleware();
     this.setupHandlers();
+  }
+
+  private getHeadersFromSocket(socket: Socket) {
+    const headers = new Headers();
+
+    for (const [key, value] of Object.entries(socket.handshake.headers)) {
+      if (typeof value === 'string') {
+        headers.set(key, value);
+      }
+    }
+
+    return headers;
+  }
+
+  private setupAuthMiddleware() {
+    this.io.use(async (socket, next) => {
+      try {
+        const headers = this.getHeadersFromSocket(socket);
+        const session = await auth.api.getSession({ headers });
+
+        if (!session?.user?.id) {
+          next(new Error('UNAUTHORIZED'));
+          return;
+        }
+
+        socket.data.userId = session.user.id;
+        socket.data.userName = session.user.name || 'Игрок';
+        next();
+      } catch {
+        next(new Error('UNAUTHORIZED'));
+      }
+    });
+  }
+
+  private async getConnectedPlayer(socket: Socket) {
+    const playerId = this.socketPlayers.get(socket.id);
+    if (!playerId) {
+      throw new Error('Игрок не подключен к комнате');
+    }
+
+    const player = await RoomService.getPlayerById(playerId);
+    if (!player) {
+      throw new Error('Игрок не найден');
+    }
+
+    return player;
+  }
+
+  private async bindSocketToPlayer(playerId: number, socketId: string) {
+    const detachedPlayerIds: number[] = [];
+
+    for (const [existingPlayerId, existingSocketId] of this.playerSockets.entries()) {
+      if (existingSocketId === socketId && existingPlayerId !== playerId) {
+        detachedPlayerIds.push(existingPlayerId);
+        this.playerSockets.delete(existingPlayerId);
+      }
+    }
+
+    for (const detachedPlayerId of detachedPlayerIds) {
+      const detachedPlayer = await RoomService.setPlayerOnline(detachedPlayerId, false);
+      if (detachedPlayer?.room) {
+        const detachedPlayers = await RoomService.getPlayers(detachedPlayer.room.id);
+        this.io.to(`room:${detachedPlayer.room.code}`).emit('player:offline', { playerId: detachedPlayerId });
+        this.io.to(`room:${detachedPlayer.room.code}`).emit('room:update', {
+          room: detachedPlayer.room,
+          players: detachedPlayers,
+        });
+      }
+    }
+
+    this.playerSockets.set(playerId, socketId);
+    this.socketPlayers.set(socketId, playerId);
   }
 
   private setupHandlers() {
     this.io.on('connection', (socket) => {
       console.log('Client connected:', socket.id);
 
-      // СОЗДАНИЕ КОМНАТЫ
       socket.on('room:create', async (data: RoomCreatePayload, callback) => {
         try {
-          const { room, player, token } = await RoomService.createRoom(
+          const userId = socket.data.userId as string;
+
+          const { room, player } = await RoomService.createRoom(
             data.maxPlayers,
             data.hardcore,
-            data.playerName
+            data.playerName,
+            userId
           );
 
-          // Присоединяем к комнате
           socket.join(`room:${room.code}`);
 
-          // Регистрируем связь playerId с socketId
-          this.playerSockets.set(player.id, socket.id);
+          await this.bindSocketToPlayer(player.id, socket.id);
+          await RoomService.setPlayerOnline(player.id, true);
 
           callback({
             success: true,
@@ -58,51 +133,49 @@ export class SocketServer {
               code: room.code,
               roomId: room.id,
               playerId: player.id,
-              token,
               shareLink: `${process.env.NEXT_PUBLIC_APP_URL}/join/${room.code}`,
             },
           });
 
-          // Отправляем обновление в комнату
           this.io.to(`room:${room.code}`).emit('room:update', {
             room,
             players: [player],
           });
+          this.io.to(`room:${room.code}`).emit('player:online', { playerId: player.id });
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Ошибка создания комнаты';
           callback({ success: false, error: message });
         }
       });
 
-      // ПРИСОЕДИНЕНИЕ К КОМНАТЕ
       socket.on('room:join', async (data: RoomJoinPayload, callback) => {
         try {
-          const { room, player, token } = await RoomService.joinRoom(
+          const userId = socket.data.userId as string;
+
+          const { room, player } = await RoomService.joinRoom(
             data.code,
-            data.playerName
+            data.playerName,
+            userId
           );
 
-          // Присоединяем к комнате
           socket.join(`room:${room.code}`);
 
-          // Регистрируем связь playerId с socketId
-          this.playerSockets.set(player.id, socket.id);
+          await this.bindSocketToPlayer(player.id, socket.id);
+          await RoomService.setPlayerOnline(player.id, true);
 
           callback({
             success: true,
             data: {
               roomId: room.id,
               playerId: player.id,
-              token,
               room,
             },
           });
 
-          // Получаем всех игроков
           const players = await RoomService.getPlayers(room.id);
 
-          // Уведомляем всех в комнате
           this.io.to(`room:${room.code}`).emit('player:joined', { player });
+          this.io.to(`room:${room.code}`).emit('player:online', { playerId: player.id });
           this.io.to(`room:${room.code}`).emit('room:update', { room, players });
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Ошибка присоединения';
@@ -110,16 +183,45 @@ export class SocketServer {
         }
       });
 
-      // СТАРТ ИГРЫ
-      socket.on('game:start', async (data: { token: string }, callback) => {
+      socket.on('player:resume', async (data: { code: string }, callback) => {
         try {
-          const payload = verifyToken(data.token);
-          if (!payload) throw new Error('Неверный токен');
+          const userId = socket.data.userId as string;
+          const roomCode = data.code.toUpperCase();
 
-          const room = await RoomService.getRoom(payload.roomId);
+          const player = await RoomService.getPlayerByUserAndRoomCode(userId, roomCode);
+          if (!player?.room) {
+            throw new Error('Игрок не найден в этой комнате');
+          }
+
+          socket.join(`room:${player.room.code}`);
+          await this.bindSocketToPlayer(player.id, socket.id);
+          await RoomService.setPlayerOnline(player.id, true);
+
+          const room = await RoomService.getRoom(player.roomId);
+          if (!room) {
+            throw new Error('Комната не найдена');
+          }
+
+          const players = await RoomService.getPlayers(room.id);
+
+          this.io.to(`room:${room.code}`).emit('player:online', { playerId: player.id });
+          this.io.to(`room:${room.code}`).emit('room:update', { room, players });
+
+          callback({ success: true, data: { room, players, playerId: player.id } });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Ошибка восстановления подключения';
+          callback({ success: false, error: message });
+        }
+      });
+
+      socket.on('game:start', async (_data: unknown, callback) => {
+        try {
+          const player = await this.getConnectedPlayer(socket);
+
+          const room = await RoomService.getRoom(player.roomId);
           if (!room) throw new Error('Комната не найдена');
 
-          if (room.hostPlayerId !== payload.playerId) {
+          if (room.hostPlayerId !== player.id) {
             throw new Error('Только хост может начать игру');
           }
 
@@ -128,15 +230,12 @@ export class SocketServer {
             throw new Error('Минимум 4 игрока для начала');
           }
 
-          // Начинаем игру
           await GameService.startGame(room.id);
 
-          // Получаем варианты апокалипсисов
           const apocalypses = await GameService.getRandomApocalypses(3);
 
           callback({ success: true });
 
-          // Уведомляем всех
           this.io.to(`room:${room.code}`).emit('game:started', {
             state: RoomState.APOCALYPSE_VOTE,
           });
@@ -147,15 +246,13 @@ export class SocketServer {
         }
       });
 
-      // ГОЛОСОВАНИЕ ЗА АПОКАЛИПСИС
-      socket.on('vote:apocalypse', async (data: VoteApocalypsePayload & { token: string }, callback) => {
+      socket.on('vote:apocalypse', async (data: VoteApocalypsePayload, callback) => {
         try {
-          const payload = verifyToken(data.token);
-          if (!payload) throw new Error('Неверный токен');
+          const player = await this.getConnectedPlayer(socket);
 
-          await GameService.voteApocalypse(payload.roomId, payload.playerId, data.apocalypseId);
+          await GameService.voteApocalypse(player.roomId, player.id, data.apocalypseId);
 
-          const room = await RoomService.getRoom(payload.roomId);
+          const room = await RoomService.getRoom(player.roomId);
           if (!room) throw new Error('Комната не найдена');
 
           const players = await RoomService.getPlayers(room.id);
@@ -163,21 +260,18 @@ export class SocketServer {
 
           callback({ success: true });
 
-          // Проверяем, все ли проголосовали
           if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === players.length) {
-            // Все проголосовали, определяем победителя
             const winnerId = parseInt(votes[0].apocalypseId);
-            
+
             this.io.to(`room:${room.code}`).emit('voting:apocalypse:complete', {
               winnerId,
               votes,
             });
 
-            // Переходим к голосованию за локацию
             setTimeout(async () => {
               await RoomService.updateRoomState(room.id, RoomState.LOCATION_VOTE);
               const locations = await GameService.getRandomLocations(3);
-              
+
               this.io.to(`room:${room.code}`).emit('location:options', { locations });
             }, 3000);
           }
@@ -187,15 +281,13 @@ export class SocketServer {
         }
       });
 
-      // ГОЛОСОВАНИЕ ЗА ЛОКАЦИЮ
-      socket.on('vote:location', async (data: VoteLocationPayload & { token: string }, callback) => {
+      socket.on('vote:location', async (data: VoteLocationPayload, callback) => {
         try {
-          const payload = verifyToken(data.token);
-          if (!payload) throw new Error('Неверный токен');
+          const player = await this.getConnectedPlayer(socket);
 
-          await GameService.voteLocation(payload.roomId, payload.playerId, data.locationId);
+          await GameService.voteLocation(player.roomId, player.id, data.locationId);
 
-          const room = await RoomService.getRoom(payload.roomId);
+          const room = await RoomService.getRoom(player.roomId);
           if (!room) throw new Error('Комната не найдена');
 
           const players = await RoomService.getPlayers(room.id);
@@ -203,23 +295,20 @@ export class SocketServer {
 
           callback({ success: true });
 
-          // Проверяем, все ли проголосовали
           if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === players.length) {
             const winnerId = parseInt(votes[0].locationId);
-            
+
             this.io.to(`room:${room.code}`).emit('voting:location:complete', {
               winnerId,
               votes,
             });
 
-            // Раздаем карты
             setTimeout(async () => {
               await RoomService.updateRoomState(room.id, RoomState.DEALING);
               await GameService.dealCards(room.id);
-              
-              // Начинаем первый раунд
+
               await RoomService.updateRoomState(room.id, RoomState.DISCUSSION);
-              
+
               this.io.to(`room:${room.code}`).emit('game:round_start', {
                 round: 1,
                 state: RoomState.DISCUSSION,
@@ -232,22 +321,19 @@ export class SocketServer {
         }
       });
 
-      // РАСКРЫТИЕ КАРТЫ
-      socket.on('card:reveal', async (data: CardRevealPayload & { token: string }, callback) => {
+      socket.on('card:reveal', async (data: CardRevealPayload, callback) => {
         try {
-          const payload = verifyToken(data.token);
-          if (!payload) throw new Error('Неверный токен');
+          const player = await this.getConnectedPlayer(socket);
 
-          const room = await RoomService.getRoom(payload.roomId);
+          const room = await RoomService.getRoom(player.roomId);
           if (!room) throw new Error('Комната не найдена');
 
           await GameService.revealCard(data.cardId, room.currentRound);
 
           callback({ success: true });
 
-          // Уведомляем всех
           this.io.to(`room:${room.code}`).emit('card:revealed', {
-            playerId: payload.playerId,
+            playerId: player.id,
             cardId: data.cardId,
           });
         } catch (error) {
@@ -256,16 +342,14 @@ export class SocketServer {
         }
       });
 
-      // ГОЛОСОВАНИЕ ЗА ИГРОКА
-      socket.on('vote:player', async (data: VotePlayerPayload & { token: string }, callback) => {
+      socket.on('vote:player', async (data: VotePlayerPayload, callback) => {
         try {
-          const payload = verifyToken(data.token);
-          if (!payload) throw new Error('Неверный токен');
+          const player = await this.getConnectedPlayer(socket);
 
-          const room = await RoomService.getRoom(payload.roomId);
+          const room = await RoomService.getRoom(player.roomId);
           if (!room) throw new Error('Комната не найдена');
 
-          await GameService.votePlayer(room.id, payload.playerId, data.targetPlayerId, room.currentRound);
+          await GameService.votePlayer(room.id, player.id, data.targetPlayerId, room.currentRound);
 
           callback({ success: true });
 
@@ -273,9 +357,7 @@ export class SocketServer {
           const alivePlayers = players.filter(p => p.isAlive);
           const votes = await GameService.countPlayerVotes(room.id, room.currentRound);
 
-          // Проверяем, все ли проголосовали
           if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === alivePlayers.length) {
-            // Определяем исключенного
             const eliminatedId = parseInt(votes[0].targetId);
             await GameService.eliminatePlayer(eliminatedId);
 
@@ -284,23 +366,20 @@ export class SocketServer {
               votes,
             });
 
-            // Проверяем условие окончания игры
             const remainingPlayers = players.filter(p => p.isAlive && p.id !== eliminatedId);
             const location = room.location;
 
             if (location && remainingPlayers.length <= location.capacity) {
-              // Игра окончена
               await RoomService.updateRoomState(room.id, RoomState.FINISHED);
-              
+
               this.io.to(`room:${room.code}`).emit('game:ended', {
                 winners: remainingPlayers,
               });
             } else {
-              // Следующий раунд
               setTimeout(async () => {
                 const newRound = room.currentRound + 1;
                 await RoomService.updateRoomState(room.id, RoomState.DISCUSSION);
-                
+
                 this.io.to(`room:${room.code}`).emit('game:round_start', {
                   round: newRound,
                   state: RoomState.DISCUSSION,
@@ -314,12 +393,10 @@ export class SocketServer {
         }
       });
 
-      // УДАЛЕНИЕ ИГРОКА (хостом)
-      socket.on('player:kick', async (data: { token: string; targetPlayerId: number }, callback) => {
+      socket.on('player:kick', async (data: { targetPlayerId: number }, callback) => {
         try {
-          const payload = verifyToken(data.token);
+          const host = await this.getConnectedPlayer(socket);
 
-          // Получаем информацию о игроке ДО удаления
           const player = await RoomService.getPlayerById(data.targetPlayerId);
           if (!player) {
             throw new Error('Игрок не найден');
@@ -330,26 +407,23 @@ export class SocketServer {
             throw new Error('Комната не найдена');
           }
 
-          // Получаем socketId ДО удаления из Map
           const targetSocketId = this.playerSockets.get(data.targetPlayerId);
 
-          // Теперь удаляем игрока из БД
-          await RoomService.removePlayer(data.targetPlayerId, payload.playerId);
+          await RoomService.removePlayer(data.targetPlayerId, host.id);
 
-          // Получаем обновленный список игроков
           const players = await RoomService.getPlayers(room.id);
 
-          // Уведомляем удаленного игрока
           if (targetSocketId) {
             this.io.to(targetSocketId).emit('player:kicked', { message: 'Вы были удалены из комнаты' });
           }
 
-          // Уведомляем всех в комнате
           this.io.to(`room:${room.code}`).emit('player:removed', { playerId: data.targetPlayerId });
           this.io.to(`room:${room.code}`).emit('room:update', { room, players });
 
-          // Удаляем из Map ПОСЛЕ отправки уведомлений
           this.playerSockets.delete(data.targetPlayerId);
+          if (targetSocketId) {
+            this.socketPlayers.delete(targetSocketId);
+          }
 
           callback({ success: true });
         } catch (error) {
@@ -358,34 +432,24 @@ export class SocketServer {
         }
       });
 
-      // ОТКЛЮЧЕНИЕ
       socket.on('disconnect', async () => {
         console.log('Client disconnected:', socket.id);
 
-        // Находим playerId по socketId
-        let disconnectedPlayerId: number | null = null;
-        for (const [playerId, socketId] of this.playerSockets.entries()) {
-          if (socketId === socket.id) {
-            disconnectedPlayerId = playerId;
-            break;
-          }
-        }
+        const disconnectedPlayerId = this.socketPlayers.get(socket.id) ?? null;
 
         if (disconnectedPlayerId) {
           try {
-            // Помечаем игрока как offline
             const player = await RoomService.setPlayerOnline(disconnectedPlayerId, false);
 
             if (player && player.room) {
               const players = await RoomService.getPlayers(player.room.id);
-              
-              // Уведомляем всех в комнате
+
               this.io.to(`room:${player.room.code}`).emit('player:offline', { playerId: disconnectedPlayerId });
               this.io.to(`room:${player.room.code}`).emit('room:update', { room: player.room, players });
             }
 
-            // Удаляем из Map
             this.playerSockets.delete(disconnectedPlayerId);
+            this.socketPlayers.delete(socket.id);
           } catch (error) {
             console.error('Error handling disconnect:', error);
           }
@@ -400,7 +464,6 @@ export class SocketServer {
 }
 
 export async function initializeSocketServer(req: NextApiRequest, res: NextApiResponseWithSocket) {
-  // Инициализируем БД
   await initializeDatabase();
 
   if (!res.socket.server.io) {
@@ -412,6 +475,7 @@ export async function initializeSocketServer(req: NextApiRequest, res: NextApiRe
       cors: {
         origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
         methods: ['GET', 'POST'],
+        credentials: true,
       },
     });
 

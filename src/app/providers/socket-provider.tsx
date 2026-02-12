@@ -23,6 +23,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       socketInstance = io(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', {
         path: '/api/socket',
         addTrailingSlash: false,
+        withCredentials: true,
       });
 
       socketInstance.on('connect', () => {

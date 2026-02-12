@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { headers } from 'next/headers';
+import { auth } from '@/auth';
 import { initializeDatabase } from '@/shared/api/db/data-source';
 import { RoomService } from '@/src/features/room-management/api/room-service';
 
@@ -46,6 +48,14 @@ export async function POST(
     const body = await request.json();
     const { playerName } = body;
 
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Требуется авторизация' },
+        { status: 401 }
+      );
+    }
+
     if (!playerName || playerName.trim().length === 0) {
       return NextResponse.json(
         { error: 'Имя игрока обязательно' },
@@ -53,14 +63,13 @@ export async function POST(
       );
     }
 
-    const result = await RoomService.joinRoom(code, playerName);
+    const result = await RoomService.joinRoom(code, playerName, session.user.id);
 
     return NextResponse.json({
       success: true,
       data: {
         roomId: result.room.id,
         playerId: result.player.id,
-        token: result.token,
         room: result.room,
       },
     });

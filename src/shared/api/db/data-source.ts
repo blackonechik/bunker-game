@@ -20,7 +20,7 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD || 'StrongPass123!',
   database: process.env.DB_DATABASE || 'bunker_game',
   synchronize: process.env.NODE_ENV === 'development',
-  logging: process.env.NODE_ENV === 'development',
+  logging: false,
   entities: [
     Apocalypse,
     Location,

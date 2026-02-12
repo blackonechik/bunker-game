@@ -1,17 +1,14 @@
 import { getDataSource } from '@/shared/api/db/data-source';
 import { Room } from '@/lib/entities/Room';
 import { Player } from '@/lib/entities/Player';
-import { Session } from '@/lib/entities/Session';
 import { generateRoomCode } from '@/shared/lib/game';
-import { generateToken } from '@/shared/lib/jwt';
 import { RoomState } from '@/shared/types';
 
 export class RoomService {
-  static async createRoom(maxPlayers: number, hardcore: boolean, playerName: string) {
+  static async createRoom(maxPlayers: number, hardcore: boolean, playerName: string, userId: string) {
     const ds = getDataSource();
     const roomRepo = ds.getRepository(Room);
     const playerRepo = ds.getRepository(Player);
-    const sessionRepo = ds.getRepository(Session);
 
     // Генерируем уникальный код
     let code = generateRoomCode();
@@ -32,6 +29,7 @@ export class RoomService {
 
     // Создаем игрока (хоста)
     const player = playerRepo.create({
+      userId,
       name: playerName,
       roomId: room.id,
       isHost: true,
@@ -43,22 +41,13 @@ export class RoomService {
     room.hostPlayerId = player.id;
     await roomRepo.save(room);
 
-    // Создаем сессию
-    const token = generateToken({ playerId: player.id, roomId: room.id });
-    const session = sessionRepo.create({
-      playerId: player.id,
-      token,
-    });
-    await sessionRepo.save(session);
-
-    return { room, player, token };
+    return { room, player };
   }
 
-  static async joinRoom(code: string, playerName: string) {
+  static async joinRoom(code: string, playerName: string, userId: string) {
     const ds = getDataSource();
     const roomRepo = ds.getRepository(Room);
     const playerRepo = ds.getRepository(Player);
-    const sessionRepo = ds.getRepository(Session);
 
     const room = await roomRepo.findOne({
       where: { code },
@@ -77,8 +66,30 @@ export class RoomService {
       throw new Error('Комната заполнена');
     }
 
+    const existingPlayer = await playerRepo.findOne({
+      where: {
+        roomId: room.id,
+        userId,
+      },
+    });
+
+    if (existingPlayer) {
+      await playerRepo.update(existingPlayer.id, {
+        name: playerName,
+        isOnline: true,
+      });
+
+      const updatedPlayer = await playerRepo.findOne({ where: { id: existingPlayer.id } });
+      if (!updatedPlayer) {
+        throw new Error('Игрок не найден');
+      }
+
+      return { room, player: updatedPlayer };
+    }
+
     // Создаем игрока
     const player = playerRepo.create({
+      userId,
       name: playerName,
       roomId: room.id,
       isHost: false,
@@ -86,15 +97,19 @@ export class RoomService {
     });
     await playerRepo.save(player);
 
-    // Создаем сессию
-    const token = generateToken({ playerId: player.id, roomId: room.id });
-    const session = sessionRepo.create({
-      playerId: player.id,
-      token,
-    });
-    await sessionRepo.save(session);
+    return { room, player };
+  }
 
-    return { room, player, token };
+  static async getPlayerByUserAndRoomCode(userId: string, code: string) {
+    const ds = getDataSource();
+    const playerRepo = ds.getRepository(Player);
+
+    return await playerRepo
+      .createQueryBuilder('player')
+      .leftJoinAndSelect('player.room', 'room')
+      .where('player.userId = :userId', { userId })
+      .andWhere('room.code = :code', { code })
+      .getOne();
   }
 
   static async getRoom(roomId: number) {
@@ -168,7 +183,6 @@ export class RoomService {
   static async removePlayer(playerId: number, hostPlayerId: number) {
     const ds = getDataSource();
     const playerRepo = ds.getRepository(Player);
-    const sessionRepo = ds.getRepository(Session);
     
     const player = await playerRepo.findOne({
       where: { id: playerId },
@@ -190,9 +204,6 @@ export class RoomService {
     if (player.isHost) {
       throw new Error('Нельзя удалить владельца комнаты');
     }
-    
-    // Удаляем сессию
-    await sessionRepo.delete({ playerId });
     
     // Удаляем игрока
     await playerRepo.remove(player);
