@@ -69,6 +69,7 @@ export interface PlayerDTO {
   isAlive: boolean;
   isHost: boolean;
   isOnline: boolean;
+  isBot: boolean;
   cards?: PlayerCardDTO[];
 }
 

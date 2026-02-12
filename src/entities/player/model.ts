@@ -26,6 +26,9 @@ export class Player {
   @Column({ name: 'is_online', default: true })
   isOnline!: boolean;
 
+  @Column({ name: 'is_bot', default: false })
+  isBot!: boolean;
+
   @CreateDateColumn({ name: 'joined_at' })
   joinedAt!: Date;
 

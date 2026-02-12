@@ -6,21 +6,26 @@ import { Button } from '@/shared/ui';
 interface LobbyControlsProps {
 	isHost: boolean;
 	playersCount: number;
+	maxPlayers: number;
 	minPlayers: number;
 	isConnected: boolean;
 	onStartGame: () => void;
+	onFillBots: () => void;
 	error?: string;
 }
 
 export function LobbyControls({
 	isHost,
 	playersCount,
+	maxPlayers,
 	minPlayers,
 	isConnected,
 	onStartGame,
+	onFillBots,
 	error,
 }: LobbyControlsProps) {
 	const canStart = playersCount >= minPlayers && isConnected;
+	const canFillBots = playersCount < maxPlayers && isConnected;
 
 	return (
 		<>
@@ -29,8 +34,11 @@ export function LobbyControls({
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.4 }}
-					className="flex justify-center"
+					className="flex flex-col md:flex-row gap-3 justify-center"
 				>
+					<Button onClick={onFillBots} disabled={!canFillBots} variant="secondary" size="large">
+						Заполнить ботами
+					</Button>
 					<Button onClick={onStartGame} disabled={!canStart} variant="primary" size="large">
 						{playersCount < minPlayers ? `Нужно минимум ${minPlayers} игрока` : 'Начать игру'}
 					</Button>

@@ -32,6 +32,7 @@ export function LobbyPlayers({ players, maxPlayers, currentPlayerId, isHost, onK
 						isHost={player.isHost}
 						isYou={isYou}
 						isOnline={player.isOnline}
+						isBot={player.isBot}
 						animationDelay={index * 0.05}
 						canKick={isHost}
 						onKick={() => onKickPlayer?.(player.id)}

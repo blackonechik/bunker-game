@@ -34,6 +34,7 @@ export class RoomService {
       roomId: room.id,
       isHost: true,
       isAlive: true,
+      isBot: false,
     });
     await playerRepo.save(player);
 
@@ -94,6 +95,7 @@ export class RoomService {
       roomId: room.id,
       isHost: false,
       isAlive: true,
+      isBot: false,
     });
     await playerRepo.save(player);
 
@@ -209,5 +211,62 @@ export class RoomService {
     await playerRepo.remove(player);
     
     return { roomId: player.roomId, playerId };
+  }
+
+  static async fillRoomWithBots(hostPlayerId: number) {
+    const ds = getDataSource();
+    const roomRepo = ds.getRepository(Room);
+    const playerRepo = ds.getRepository(Player);
+
+    const host = await playerRepo.findOne({
+      where: { id: hostPlayerId },
+      relations: ['room'],
+    });
+
+    if (!host || !host.isHost) {
+      throw new Error('Только владелец комнаты может добавлять ботов');
+    }
+
+    const room = await roomRepo.findOne({
+      where: { id: host.roomId },
+      relations: ['players'],
+    });
+
+    if (!room) {
+      throw new Error('Комната не найдена');
+    }
+
+    if (room.state !== RoomState.WAITING) {
+      throw new Error('Ботов можно добавлять только до старта игры');
+    }
+
+    const availableSlots = room.maxPlayers - room.players.length;
+    if (availableSlots <= 0) {
+      return {
+        room,
+        players: room.players,
+        addedBots: [] as Player[],
+      };
+    }
+
+    const existingBotCount = room.players.filter((player) => player.isBot).length;
+    const timestamp = Date.now();
+
+    const bots = Array.from({ length: availableSlots }, (_, index) =>
+      playerRepo.create({
+        userId: `bot:${room.id}:${timestamp}:${index}`,
+        name: `Бот ${existingBotCount + index + 1}`,
+        roomId: room.id,
+        isHost: false,
+        isAlive: true,
+        isOnline: true,
+        isBot: true,
+      })
+    );
+
+    const addedBots = await playerRepo.save(bots);
+    const players = await this.getPlayers(room.id);
+
+    return { room, players, addedBots };
   }
 }

@@ -29,11 +29,24 @@ export function useSocketEmit() {
           return;
         }
 
+        let completed = false;
+        const timeoutMs = 8000;
+
+        const timeoutId = window.setTimeout(() => {
+          if (completed) return;
+          completed = true;
+          reject(new Error('Сервер сокетов не ответил. Попробуйте перезагрузить страницу.'));
+        }, timeoutMs);
+
         socket.emit(event, data, (response: any) => {
-          if (response.success) {
+          if (completed) return;
+          completed = true;
+          window.clearTimeout(timeoutId);
+
+          if (response?.success) {
             resolve(response.data);
           } else {
-            reject(new Error(response.error || 'Unknown error'));
+            reject(new Error(response?.error || 'Unknown error'));
           }
         });
       });

@@ -3,6 +3,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { NextApiRequest } from 'next';
 import { NextApiResponse } from 'next';
 import { initializeDatabase } from '../db/data-source';
+import { Player } from '@/lib/entities/Player';
 import { RoomService } from '@/src/features/room-management/api/room-service';
 import { GameService } from '@/features/game-flow';
 import { auth } from '@/auth';
@@ -105,6 +106,46 @@ export class SocketServer {
 
     this.playerSockets.set(playerId, socketId);
     this.socketPlayers.set(socketId, playerId);
+  }
+
+  private getRandomItem<T>(items: T[]): T {
+    return items[Math.floor(Math.random() * items.length)];
+  }
+
+  private async runBotApocalypseVotes(roomId: number, apocalypseIds: number[]) {
+    if (apocalypseIds.length === 0) return;
+
+    const players = await RoomService.getPlayers(roomId);
+    const botPlayers = players.filter((player) => player.isBot);
+
+    for (const bot of botPlayers) {
+      const apocalypseId = this.getRandomItem(apocalypseIds);
+      await GameService.voteApocalypse(roomId, bot.id, apocalypseId);
+    }
+  }
+
+  private async runBotLocationVotes(roomId: number, locationIds: number[]) {
+    if (locationIds.length === 0) return;
+
+    const players = await RoomService.getPlayers(roomId);
+    const botPlayers = players.filter((player) => player.isBot);
+
+    for (const bot of botPlayers) {
+      const locationId = this.getRandomItem(locationIds);
+      await GameService.voteLocation(roomId, bot.id, locationId);
+    }
+  }
+
+  private async runBotPlayerVotes(roomId: number, round: number, alivePlayers: Player[]) {
+    const botPlayers = alivePlayers.filter((player) => player.isBot);
+
+    for (const bot of botPlayers) {
+      const targets = alivePlayers.filter((player) => player.id !== bot.id);
+      if (targets.length === 0) continue;
+
+      const target = this.getRandomItem(targets);
+      await GameService.votePlayer(roomId, bot.id, target.id, round);
+    }
   }
 
   private setupHandlers() {
@@ -240,8 +281,48 @@ export class SocketServer {
             state: RoomState.APOCALYPSE_VOTE,
           });
           this.io.to(`room:${room.code}`).emit('apocalypse:options', { apocalypses });
+
+          setTimeout(async () => {
+            try {
+              await this.runBotApocalypseVotes(
+                room.id,
+                apocalypses.map((apocalypse) => apocalypse.id)
+              );
+            } catch (error) {
+              console.error('Error processing bot apocalypse votes:', error);
+            }
+          }, 500);
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Ошибка старта игры';
+          callback({ success: false, error: message });
+        }
+      });
+
+      socket.on('room:fill-bots', async (_data: unknown, callback) => {
+        try {
+          const host = await this.getConnectedPlayer(socket);
+
+          const room = await RoomService.getRoom(host.roomId);
+          if (!room) throw new Error('Комната не найдена');
+
+          const { players, addedBots } = await RoomService.fillRoomWithBots(host.id);
+
+          callback({
+            success: true,
+            data: { addedBots: addedBots.length },
+          });
+
+          for (const bot of addedBots) {
+            this.io.to(`room:${room.code}`).emit('player:joined', { player: bot });
+            this.io.to(`room:${room.code}`).emit('player:online', { playerId: bot.id });
+          }
+
+          this.io.to(`room:${room.code}`).emit('room:update', {
+            room,
+            players,
+          });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Ошибка добавления ботов';
           callback({ success: false, error: message });
         }
       });
@@ -273,6 +354,17 @@ export class SocketServer {
               const locations = await GameService.getRandomLocations(3);
 
               this.io.to(`room:${room.code}`).emit('location:options', { locations });
+
+              setTimeout(async () => {
+                try {
+                  await this.runBotLocationVotes(
+                    room.id,
+                    locations.map((location) => location.id)
+                  );
+                } catch (error) {
+                  console.error('Error processing bot location votes:', error);
+                }
+              }, 500);
             }, 3000);
           }
         } catch (error) {
@@ -351,13 +443,16 @@ export class SocketServer {
 
           await GameService.votePlayer(room.id, player.id, data.targetPlayerId, room.currentRound);
 
+          const alivePlayers = (await RoomService.getPlayers(room.id)).filter((p) => p.isAlive);
+          await this.runBotPlayerVotes(room.id, room.currentRound, alivePlayers);
+
           callback({ success: true });
 
           const players = await RoomService.getPlayers(room.id);
-          const alivePlayers = players.filter(p => p.isAlive);
+          const alivePlayersAfterVotes = players.filter((p) => p.isAlive);
           const votes = await GameService.countPlayerVotes(room.id, room.currentRound);
 
-          if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === alivePlayers.length) {
+          if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === alivePlayersAfterVotes.length) {
             const eliminatedId = parseInt(votes[0].targetId);
             await GameService.eliminatePlayer(eliminatedId);
 

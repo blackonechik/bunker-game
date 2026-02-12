@@ -7,12 +7,13 @@ interface PlayerCardProps {
 	isHost: boolean;
 	isYou: boolean;
 	isOnline: boolean;
+	isBot?: boolean;
 	animationDelay?: number;
 	onKick?: () => void;
 	canKick?: boolean;
 }
 
-export function PlayerCard({ name, isHost, isYou, isOnline, animationDelay = 0, onKick, canKick }: PlayerCardProps) {
+export function PlayerCard({ name, isHost, isYou, isOnline, isBot = false, animationDelay = 0, onKick, canKick }: PlayerCardProps) {
 	return (
 		<motion.div
 			initial={{ opacity: 0, scale: 0.8 }}
@@ -46,6 +47,7 @@ export function PlayerCard({ name, isHost, isYou, isOnline, animationDelay = 0, 
 				{isYou ? 'ВЫ' : name.substring(0, 2).toUpperCase()}
 			</div>
 			<span className="text-xs font-bold uppercase truncate w-full text-center">{name}</span>
+			{isBot && <span className="text-[10px] text-sky-400 font-bold uppercase">Бот</span>}
 			{isHost && <span className="text-[10px] text-amber-500 font-bold uppercase">Владелец бункера</span>}
 			{!isOnline && <span className="text-[10px] text-red-500 font-bold uppercase">Оффлайн</span>}
 		</motion.div>

@@ -229,6 +229,20 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
     });
   };
 
+  const handleFillBots = async () => {
+    try {
+      const result = await emit<{ addedBots: number }>('room:fill-bots', {});
+      if (result.addedBots > 0) {
+        showNotification.success('Боты добавлены', `Добавлено ботов: ${result.addedBots}`);
+      } else {
+        showNotification.success('Комната заполнена', 'Свободных слотов для ботов нет');
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Ошибка добавления ботов';
+      showNotification.error('Ошибка', message.includes('не ответил') ? `${message} Если проблема повторяется, перезапустите dev-сервер.` : message);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -262,9 +276,11 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
           <LobbyControls
             isHost={isHost}
             playersCount={players.length}
+            maxPlayers={room?.maxPlayers || 0}
             minPlayers={4}
             isConnected={isConnected}
             onStartGame={handleStartGame}
+            onFillBots={handleFillBots}
             error={error}
           />
 
