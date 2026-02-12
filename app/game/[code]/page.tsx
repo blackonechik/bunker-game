@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/shared/lib/auth-client';
 import { useSocket } from '@/app/providers/socket-provider';
-import { useSocketEvent } from '@/shared/hooks/use-socket';
+import { useSocketEvent, useSocketEmit } from '@/shared/hooks/use-socket';
 import { PlayerDTO, RoomDTO, RoomState, ChatMessageDTO, ApocalypseDTO, LocationDTO } from '@/shared/types';
 import { ChatPanel } from '@/widgets/chat-panel';
 import { PlayerCard } from '@/widgets/player-list';
@@ -13,7 +13,8 @@ import { PlayerList } from '@/widgets/player-list';
 
 export default function GamePage({ params }: { params: Promise<{ code: string }> }) {
   const router = useRouter();
-  const { socket, isConnected } = useSocket();
+  const { isConnected } = useSocket();
+  const { emit } = useSocketEmit();
   const { data: session } = useSession();
   
   const [code, setCode] = useState<string>('');
@@ -25,6 +26,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   const [location, setLocation] = useState<LocationDTO | null>(null);
   const [apocalypseOptions, setApocalypseOptions] = useState<ApocalypseDTO[]>([]);
   const [locationOptions, setLocationOptions] = useState<LocationDTO[]>([]);
+  const resumeAttemptedRef = useRef(false);
   const sessionUserId = session?.user?.id ?? null;
   const sessionPlayer = players.find(p => p.userId === sessionUserId) ?? null;
   const playerId = sessionPlayer?.id ?? 0;
@@ -43,8 +45,14 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
 
   // Распаковка params
   useEffect(() => {
-    params.then(p => setCode(p.code));
+    params.then(p => setCode(p.code.toUpperCase()));
   }, [params]);
+
+  useEffect(() => {
+    if (!isConnected) {
+      resumeAttemptedRef.current = false;
+    }
+  }, [isConnected]);
 
   // Загрузка данных
   useEffect(() => {
@@ -68,6 +76,35 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
 
     fetchRoom();
   }, [code]);
+
+  useEffect(() => {
+    if (!code || !isConnected || !session?.user?.id) return;
+    if (resumeAttemptedRef.current) return;
+
+    resumeAttemptedRef.current = true;
+
+    let cancelled = false;
+
+    const resumePlayer = async () => {
+      try {
+        const data = await emit<{ room: RoomDTO; players: PlayerDTO[] }>('player:resume', { code });
+        if (cancelled) return;
+
+        setRoom(data.room);
+        setPlayers(data.players);
+      } catch {
+        if (!cancelled) {
+          resumeAttemptedRef.current = false;
+        }
+      }
+    };
+
+    resumePlayer();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [code, emit, isConnected, session?.user?.id]);
 
   // Socket события
   useSocketEvent<{ room: RoomDTO; players: PlayerDTO[] }>('room:update', (data) => {
@@ -175,44 +212,42 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     }]);
   };
 
-  const handleVoteApocalypse = (apocalypseId: number) => {
-    if (!socket) return;
+  const emitWithResumeRetry = async <TData,>(event: string, data: TData) => {
+    try {
+      await emit(event, data);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
 
-    socket.emit('vote:apocalypse', { apocalypseId }, (res: { success: boolean; error?: string }) => {
-      if (!res.success) {
-        addSystemMessage(`Ошибка: ${res.error}`);
+      if (message.includes('Игрок не подключен к комнате') && code) {
+        try {
+          await emit('player:resume', { code });
+          await emit(event, data);
+          return;
+        } catch (retryError) {
+          const retryMessage = retryError instanceof Error ? retryError.message : 'Unknown error';
+          addSystemMessage(`Ошибка: ${retryMessage}`);
+          return;
+        }
       }
-    });
+
+      addSystemMessage(`Ошибка: ${message}`);
+    }
   };
 
-  const handleVoteLocation = (locationId: number) => {
-    if (!socket) return;
-
-    socket.emit('vote:location', { locationId }, (res: { success: boolean; error?: string }) => {
-      if (!res.success) {
-        addSystemMessage(`Ошибка: ${res.error}`);
-      }
-    });
+  const handleVoteApocalypse = async (apocalypseId: number) => {
+    await emitWithResumeRetry('vote:apocalypse', { apocalypseId });
   };
 
-  const handleRevealCard = (cardId: number) => {
-    if (!socket) return;
-
-    socket.emit('card:reveal', { cardId }, (res: { success: boolean; error?: string }) => {
-      if (!res.success) {
-        addSystemMessage(`Ошибка: ${res.error}`);
-      }
-    });
+  const handleVoteLocation = async (locationId: number) => {
+    await emitWithResumeRetry('vote:location', { locationId });
   };
 
-  const handleVotePlayer = (targetPlayerId: number) => {
-    if (!socket) return;
+  const handleRevealCard = async (cardId: number) => {
+    await emitWithResumeRetry('card:reveal', { cardId });
+  };
 
-    socket.emit('vote:player', { targetPlayerId }, (res: { success: boolean; error?: string }) => {
-      if (!res.success) {
-        addSystemMessage(`Ошибка: ${res.error}`);
-      }
-    });
+  const handleVotePlayer = async (targetPlayerId: number) => {
+    await emitWithResumeRetry('vote:player', { targetPlayerId });
   };
 
   // Рендер голосования за апокалипсис
