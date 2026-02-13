@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, UpdateDateColumn, Relation } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, UpdateDateColumn } from 'typeorm';
+import type { Relation } from 'typeorm';
 import { Player } from './Player';
 
 @Entity('sessions')

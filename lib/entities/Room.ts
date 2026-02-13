@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, ManyToOne, JoinColumn, Relation } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import type { Relation } from 'typeorm';
 import { Apocalypse } from './Apocalypse';
 import { Location } from './Location';
 import { RoomState } from '../types';

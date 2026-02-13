@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Relation } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import type { Relation } from 'typeorm';
 import { Card } from './Card';
 import { Player } from './Player';
 
