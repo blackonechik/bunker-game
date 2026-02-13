@@ -51,7 +51,7 @@ export function GameTopBar({ round, state, timer, apocalypseName, locationName }
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="text-[9px] uppercase text-zinc-500">sec</span>
+            <span className="text-[9px] uppercase text-zinc-500">сек.</span>
             <span className={isUrgent ? 'text-2xl font-black text-red-500' : 'text-2xl font-black text-orange-500'}>{normalizedTimer}</span>
           </div>
         </div>

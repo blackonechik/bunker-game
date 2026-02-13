@@ -2,12 +2,11 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 import { useSession } from '@/shared/lib/auth-client';
 import { useSocket } from '@/app/providers/socket-provider';
 import { useSocketEvent, useSocketEmit } from '@/shared/hooks/use-socket';
 import { PlayerDTO, RoomDTO, RoomState, ChatMessageDTO, ApocalypseDTO, LocationDTO } from '@/shared/types';
-import { GameTopBar, SystemLogPanel, PlayersGrid, MyCardsHud } from '@/widgets/game-board';
+import { GameTopBar, SystemLogPanel, PlayersGrid, MyCardsHud, VictoryScreen } from '@/widgets/game-board';
 
 interface RoundStartPayload {
   round: number;
@@ -17,7 +16,6 @@ interface RoundStartPayload {
 }
 
 export default function GamePage({ params }: { params: Promise<{ code: string }> }) {
-  const router = useRouter();
   const { isConnected } = useSocket();
   const { emit } = useSocketEmit();
   const { data: session } = useSession();
@@ -32,6 +30,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   const [location, setLocation] = useState<LocationDTO | null>(null);
   const [apocalypseOptions, setApocalypseOptions] = useState<ApocalypseDTO[]>([]);
   const [locationOptions, setLocationOptions] = useState<LocationDTO[]>([]);
+  const [winners, setWinners] = useState<PlayerDTO[]>([]);
 
   const resumeAttemptedRef = useRef(false);
   const systemMessageKeysRef = useRef<Set<string>>(new Set());
@@ -276,12 +275,10 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     );
   });
 
-  useSocketEvent<{ winners: PlayerDTO[] }>('game:ended', () => {
+  useSocketEvent<{ winners: PlayerDTO[] }>('game:ended', (data) => {
     addSystemMessage('Игра окончена: в бункере осталось 2 выживших.');
-
-    setTimeout(() => {
-      router.push('/');
-    }, 5000);
+    setWinners(data.winners || []);
+    setRoom((prev) => (prev ? { ...prev, state: RoomState.FINISHED } : prev));
   });
 
   useEffect(() => {
@@ -432,6 +429,11 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     );
   }
 
+  if (room?.state === RoomState.FINISHED) {
+    const finalWinners = winners.length > 0 ? winners : players.filter((player) => player.isAlive);
+    return <VictoryScreen winners={finalWinners} />;
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-300 font-mono overflow-x-hidden relative pb-64">
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_50%,rgba(24,24,27,0)_0%,rgba(9,9,11,1)_100%)] z-10" />
@@ -444,7 +446,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
         locationName={location?.name}
       />
 
-      <main className="relative z-20 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <main className="relative z-20 py-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-3">
           <SystemLogPanel messages={messages} onSendMessage={handleSendMessage} />
         </div>

@@ -171,6 +171,22 @@ export class GameService {
     await playerRepo.update(playerId, { isAlive: false });
   }
 
+  static async revealAllPlayerCards(playerId: number, round: number) {
+    const ds = getDataSource();
+    const playerCardRepo = ds.getRepository(PlayerCard);
+
+    await playerCardRepo
+      .createQueryBuilder()
+      .update(PlayerCard)
+      .set({
+        isRevealed: true,
+        revealedAt: new Date(),
+        revealedRound: round,
+      })
+      .where('player_id = :playerId', { playerId })
+      .execute();
+  }
+
   static async setApocalypse(roomId: number, apocalypseId: number) {
     const ds = getDataSource();
     const roomRepo = ds.getRepository(Room);

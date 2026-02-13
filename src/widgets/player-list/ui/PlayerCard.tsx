@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { PlayerCardDTO } from '@/shared/types';
+import { getCardTypeLabel } from '@/shared/lib';
 
 interface PlayerCardProps {
   card: PlayerCardDTO;
@@ -33,19 +34,7 @@ export function PlayerCard({ card, onReveal, canReveal = false }: PlayerCardProp
     }
   };
 
-  const getTypeLabel = () => {
-    const labels: Record<string, string> = {
-      profession: 'Profession',
-      health: 'Health',
-      phobia: 'Psychology',
-      inventory: 'Inventory',
-      trait: 'Trait',
-      hobby: 'Hobby',
-      age: 'Age',
-      special: 'Special'
-    };
-    return labels[card.card.type] || card.card.type;
-  };
+  const typeLabel = getCardTypeLabel(card.card.type);
 
   if (!card.isRevealed) {
     return (
@@ -54,7 +43,7 @@ export function PlayerCard({ card, onReveal, canReveal = false }: PlayerCardProp
         className={`min-w-[200px] md:min-w-0 snap-center p-4 bg-zinc-900 border-t-4 ${getBorderColor()} shadow-xl relative overflow-hidden group cursor-pointer`}
       >
         <div className="text-[10px] text-zinc-500 font-bold uppercase mb-2">
-          {getTypeLabel()}
+          {typeLabel}
         </div>
         
         <div className="text-xl font-black uppercase text-zinc-600 mb-4 blur-sm select-none">
@@ -89,7 +78,7 @@ export function PlayerCard({ card, onReveal, canReveal = false }: PlayerCardProp
       className={`min-w-[200px] md:min-w-0 snap-center p-4 ${isSpecial ? 'bg-emerald-950' : 'bg-zinc-900'} border-t-4 ${getBorderColor()} shadow-xl group hover:-translate-y-2 transition-transform duration-300 ${isSpecial ? 'shadow-[0_0_20px_rgba(16,185,129,0.2)]' : ''}`}
     >
       <div className="text-[10px] text-zinc-500 font-bold uppercase mb-2">
-        {getTypeLabel()}
+        {typeLabel}
       </div>
       
       <div className="text-xl font-black uppercase text-white mb-4">

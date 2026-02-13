@@ -34,6 +34,7 @@ export class SocketServer {
   private roomApocalypseOptions: Map<number, ApocalypseDTO[]> = new Map();
   private roomLocationOptions: Map<number, LocationDTO[]> = new Map();
   private roomDiscussionTimers: Map<number, NodeJS.Timeout> = new Map();
+  private roomCardRevealTimers: Map<number, NodeJS.Timeout> = new Map();
   private finalizingApocalypseRooms: Set<number> = new Set();
   private finalizingLocationRooms: Set<number> = new Set();
   private finalizingPlayerVoteRounds: Set<string> = new Set();
@@ -125,8 +126,14 @@ export class SocketServer {
 
     const players = await RoomService.getPlayers(roomId);
     const botPlayers = players.filter((player) => player.isBot);
+    const existingVotes = await GameService.getApocalypseVotes(roomId);
+    const votedBotIds = new Set(existingVotes.map((vote) => vote.playerId));
 
     for (const bot of botPlayers) {
+      if (votedBotIds.has(bot.id)) {
+        continue;
+      }
+
       const apocalypseId = this.getRandomItem(apocalypseIds);
       await GameService.voteApocalypse(roomId, bot.id, apocalypseId);
     }
@@ -176,6 +183,31 @@ export class SocketServer {
     }
   }
 
+  private async revealMissingPlayerCards(roomId: number, round: number, roomCode: string) {
+    const players = await RoomService.getPlayers(roomId);
+    const alivePlayers = players.filter((player) => player.isAlive);
+
+    for (const player of alivePlayers) {
+      const alreadyRevealedThisRound = (player.cards || []).some((card) => card.revealedRound === round);
+      if (alreadyRevealedThisRound) {
+        continue;
+      }
+
+      const hiddenCards = (player.cards || []).filter((card) => !card.isRevealed);
+      if (hiddenCards.length === 0) {
+        continue;
+      }
+
+      const cardToReveal = this.getRandomItem(hiddenCards);
+      await GameService.revealCard(cardToReveal.id, round);
+
+      this.io.to(`room:${roomCode}`).emit('card:revealed', {
+        playerId: player.id,
+        cardId: cardToReveal.id,
+      });
+    }
+  }
+
   private async processPlayerVotingOutcome(roomId: number, roomCode: string, round: number) {
     const finalizeKey = `${roomId}:${round}`;
     if (this.finalizingPlayerVoteRounds.has(finalizeKey)) {
@@ -210,6 +242,7 @@ export class SocketServer {
 
       const eliminatedId = parseInt(latestVotes[0].targetId);
       await GameService.eliminatePlayer(eliminatedId);
+      await GameService.revealAllPlayerCards(eliminatedId, round);
       await this.emitRoomUpdate(room.id, room.code);
 
       this.io.to(`room:${room.code}`).emit('player:eliminated', {
@@ -222,6 +255,7 @@ export class SocketServer {
 
       if (remainingPlayers.length <= 2) {
         this.clearDiscussionTimer(room.id);
+        this.clearCardRevealTimer(room.id);
         await RoomService.updateRoundTimer(room.id, null);
         await RoomService.updateRoomState(room.id, RoomState.FINISHED);
         await this.emitRoomUpdate(room.id, room.code);
@@ -244,6 +278,14 @@ export class SocketServer {
     if (timer) {
       clearTimeout(timer);
       this.roomDiscussionTimers.delete(roomId);
+    }
+  }
+
+  private clearCardRevealTimer(roomId: number) {
+    const timer = this.roomCardRevealTimers.get(roomId);
+    if (timer) {
+      clearTimeout(timer);
+      this.roomCardRevealTimers.delete(roomId);
     }
   }
 
@@ -285,6 +327,7 @@ export class SocketServer {
       return false;
     }
 
+    this.clearCardRevealTimer(roomId);
     await RoomService.updateRoomState(roomId, RoomState.VOTING);
     await RoomService.updateRoundTimer(roomId, null);
     await this.emitRoomUpdate(roomId, roomCode);
@@ -328,6 +371,19 @@ export class SocketServer {
       await this.emitRoomUpdate(roomId, roomCode);
       await this.tryStartVotingPhase(roomId, roomCode, round);
     }, 1200);
+
+    this.clearCardRevealTimer(roomId);
+    const revealTimeout = setTimeout(async () => {
+      const room = await RoomService.getRoom(roomId);
+      if (!room || room.state !== RoomState.CARD_REVEAL || room.currentRound !== round) {
+        return;
+      }
+
+      await this.revealMissingPlayerCards(roomId, round, roomCode);
+      await this.emitRoomUpdate(roomId, roomCode);
+      await this.tryStartVotingPhase(roomId, roomCode, round);
+    }, 30000);
+    this.roomCardRevealTimers.set(roomId, revealTimeout);
 
     await this.tryStartVotingPhase(roomId, roomCode, round);
   }
@@ -600,16 +656,6 @@ export class SocketServer {
             this.io.to(`room:${room.code}`).emit('apocalypse:options', { apocalypses });
           }, 1200);
 
-          setTimeout(async () => {
-            try {
-              await this.runBotApocalypseVotes(
-                room.id,
-                apocalypses.map((apocalypse) => apocalypse.id)
-              );
-            } catch (error) {
-              console.error('Error processing bot apocalypse votes:', error);
-            }
-          }, 500);
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Ошибка старта игры';
           callback({ success: false, error: message });
@@ -657,6 +703,13 @@ export class SocketServer {
           }
 
           await GameService.voteApocalypse(player.roomId, player.id, data.apocalypseId);
+
+          if (!player.isBot) {
+            const availableApocalypseIds =
+              this.roomApocalypseOptions.get(room.id)?.map((apocalypse) => apocalypse.id) || [data.apocalypseId];
+
+            await this.runBotApocalypseVotes(room.id, availableApocalypseIds);
+          }
 
           const players = await RoomService.getPlayers(room.id);
           const votes = await GameService.countApocalypseVotes(room.id);

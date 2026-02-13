@@ -1,6 +1,7 @@
 'use client';
 
 import { PlayerCardDTO } from '@/shared/types';
+import { getAccentClasses, getCardTypeLabel } from '@/shared/lib';
 
 interface MyCardsHudProps {
   playerName: string;
@@ -10,26 +11,15 @@ interface MyCardsHudProps {
   onReveal: (cardId: number) => void;
 }
 
-const cardTypeLabel: Record<string, string> = {
-  profession: 'Profession',
-  health: 'Health',
-  age: 'Age',
-  hobby: 'Hobby',
-  inventory: 'Baggage',
-  trait: 'Trait',
-  special: 'Fact',
-  phobia: 'Phobia',
-};
-
 export function MyCardsHud({ playerName, cards, canReveal, hasRevealedThisRound, onReveal }: MyCardsHudProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
-      <div className="max-w-6xl mx-auto bg-zinc-900 border-t-4 border-orange-600 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] pointer-events-auto relative">
+      <div className="max-w-7xl mx-auto bg-zinc-950 border-t-2 border-zinc-800 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] pointer-events-auto relative">
         <div className="p-6">
           <div className="flex justify-between items-end mb-6 gap-4 flex-wrap">
             <div>
-              <h2 className="text-orange-500 font-black uppercase text-xl italic">Personnel File: {playerName}</h2>
-              <p className="text-[10px] text-zinc-500 uppercase">Biometric Auth: Verified | Access Level: Delta</p>
+              <h2 className="text-zinc-100 font-black uppercase text-2xl italic tracking-tight">Ваши карты: {playerName}</h2>
+              <p className="text-[10px] text-zinc-500 uppercase">За один раунд можно открыть одну карту</p>
             </div>
             <div className="text-[10px] uppercase font-bold text-zinc-400">
               {canReveal
@@ -40,42 +30,56 @@ export function MyCardsHud({ playerName, cards, canReveal, hasRevealedThisRound,
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[52vh] overflow-y-auto pr-1">
             {cards.length === 0 && (
               <div className="col-span-full bg-black border border-zinc-700 p-4 text-[11px] uppercase text-zinc-500">
                 Карточки еще не выданы. Ожидание раздачи...
               </div>
             )}
 
-            {cards.map((card) => {
+            {cards.map((card, index) => {
               const isRevealed = card.isRevealed;
               const canRevealThisCard = canReveal && !hasRevealedThisRound && !isRevealed;
+              const accent = getAccentClasses(card.card.type);
+              const isSpecial = card.card.type === 'special';
 
               return (
-                <div key={card.id} className="bg-black border border-zinc-700 p-3 relative overflow-hidden">
-                  <div className={`absolute top-0 right-0 text-[8px] px-1 font-bold uppercase ${
-                    isRevealed ? 'bg-green-600 text-black' : 'bg-zinc-700 text-zinc-300'
-                  }`}>
-                    {isRevealed ? 'Public' : 'Secret'}
+                <div
+                  key={card.id}
+                  className={`group relative bg-zinc-900 border-2 border-zinc-800 p-5 transition-all overflow-hidden ${accent.hudBorder}`}
+                >
+                  <div className={`absolute -right-4 -top-4 text-6xl font-black ${isSpecial ? 'text-green-500/20' : 'text-zinc-800'}`}>
+                    {String(index + 1).padStart(2, '0')}
                   </div>
 
-                  <p className="text-zinc-500 text-[9px] uppercase mb-1">
-                    {cardTypeLabel[card.card.type] || card.card.type}
-                  </p>
+                  <div className="relative z-10">
+                    <h3 className="text-lg font-bold text-zinc-100 uppercase leading-none mb-3">
+                      {getCardTypeLabel(card.card.type)}
+                    </h3>
+                    <div className={`h-px w-full mb-3 ${isSpecial ? 'bg-green-500' : 'bg-zinc-800'}`} />
 
-                  <p className="text-zinc-100 font-bold text-xs">
-                    {card.card.value}
-                  </p>
+                    <p className={`text-base font-bold text-zinc-400 transition-colors ${accent.hudValue}`}>
+                      {card.card.value}
+                    </p>
+
+                    <div className={`mt-3 text-[9px] uppercase font-bold ${
+                      isRevealed ? 'text-green-500' : 'text-zinc-500'
+                    }`}>
+                      {isRevealed ? 'Открыта' : 'Скрыта'}
+                    </div>
+                  </div>
 
                   {canRevealThisCard && (
                     <button
                       type="button"
                       onClick={() => onReveal(card.id)}
-                      className="mt-3 w-full px-2 py-1 bg-orange-600 border border-orange-400 text-black text-[10px] uppercase font-bold hover:bg-orange-400 transition-all"
+                      className="mt-4 w-full px-2 py-2 bg-green-600 border border-green-400 text-black text-[10px] uppercase font-bold hover:bg-green-400 transition-all relative z-10"
                     >
-                      Reveal
+                      Open Card
                     </button>
                   )}
+
+                  <div className={`absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-500 ${accent.hudBar}`} />
                 </div>
               );
             })}

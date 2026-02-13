@@ -1,6 +1,7 @@
 'use client';
 
 import { PlayerDTO } from '@/shared/types';
+import { getAccentClasses } from '@/shared/lib';
 
 interface PlayersGridProps {
   players: PlayerDTO[];
@@ -11,16 +12,18 @@ interface PlayersGridProps {
 
 export function PlayersGrid({ players, currentPlayerId, canVote, onVote }: PlayersGridProps) {
   return (
-    <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
       {players.map((player, index) => {
         const isCurrentPlayer = player.id === currentPlayerId;
         const isEliminated = !player.isAlive;
-        const revealedCards = player.cards?.filter((card) => card.isRevealed) || [];
+        const allCards = player.cards || [];
+        const revealedCards = allCards.filter((card) => card.isRevealed);
+        const cardsToShow = isEliminated ? allCards : revealedCards.slice(0, 6);
 
         return (
           <article
             key={player.id}
-            className={`bg-zinc-900 border-2 p-4 relative transition-all ${
+            className={`bg-zinc-900 border-2 p-2 relative transition-all ${
               isEliminated
                 ? 'border-zinc-900 grayscale opacity-60'
                 : isCurrentPlayer
@@ -60,14 +63,17 @@ export function PlayersGrid({ players, currentPlayerId, canVote, onVote }: Playe
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[10px] uppercase font-bold">
-              {revealedCards.slice(0, 6).map((revealedCard) => (
-                <div key={revealedCard.id} className="bg-zinc-800 p-2 border border-green-900 text-green-500 truncate">
-                  {revealedCard.card.type}: {revealedCard.card.value}
+            <div className="grid grid-cols-1 gap-1 text-[10px] uppercase font-bold">
+              {cardsToShow.map((displayCard) => (
+                <div
+                  key={displayCard.id}
+                  className={`p-2 border truncate ${getAccentClasses(displayCard.card.type).listItem}`}
+                >
+                  {displayCard.card.type}: {displayCard.card.value}
                 </div>
               ))}
 
-              {Array.from({ length: Math.max(0, 6 - revealedCards.length) }).map((_, hiddenIndex) => (
+              {!isEliminated && Array.from({ length: Math.max(0, 6 - revealedCards.length) }).map((_, hiddenIndex) => (
                 <div key={`hidden-${player.id}-${hiddenIndex}`} className="bg-zinc-950 p-2 border border-zinc-800 text-zinc-600">
                   ???
                 </div>
@@ -80,7 +86,7 @@ export function PlayersGrid({ players, currentPlayerId, canVote, onVote }: Playe
               onClick={() => onVote(player.id)}
               className="mt-4 w-full py-1 text-[10px] border uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-red-950 text-red-500 border-red-900 hover:bg-red-900 hover:text-white"
             >
-              Vote Out
+              Проголосовать
             </button>
           </article>
         );
