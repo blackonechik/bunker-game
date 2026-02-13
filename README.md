@@ -89,6 +89,54 @@ npm run dev
 
 Приложение будет доступно на `http://localhost:3000`
 
+## 🚢 Деплой через GitHub Actions + Docker
+
+Проект деплоится через workflow `.github/workflows/deploy.yml`:
+- собирается Docker-образ,
+- пушится в GHCR,
+- на VPS обновляется контейнер через `docker compose`.
+
+### 1. Подготовка VPS (один раз)
+
+```bash
+sudo mkdir -p /opt/bunker-fullstack
+sudo chown -R $USER:$USER /opt/bunker-fullstack
+```
+
+Создайте `/opt/bunker-fullstack/.env` (на сервере):
+
+```env
+# Database (MySQL работает отдельно на сервере)
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USERNAME=bunker
+DB_PASSWORD=change_me
+DB_DATABASE=bunker_game
+
+# Better Auth
+BETTER_AUTH_SECRET=replace_with_openssl_rand_base64_32
+BETTER_AUTH_URL=https://your-domain.com
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# App
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+NODE_ENV=production
+```
+
+### 2. GitHub Secrets
+
+Добавьте в репозиторий:
+- `SERVER_IP` — IP VPS
+- `SERVER_SSH_KEY` — приватный SSH ключ
+
+SSH пользователь в workflow зафиксирован как `deploy`.
+
+### 3. Запуск деплоя
+
+Деплой запускается автоматически при push в `main` (или вручную через `workflow_dispatch`).
+MySQL контейнером не поднимается: используется внешняя БД на том же сервере (`127.0.0.1:3306`).
+
 ## 🎯 Игровой Flow
 
 1. **Главная страница** - Анимация открывающихся дверей бункера

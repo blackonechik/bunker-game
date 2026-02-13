@@ -1,0 +1,10 @@
+services:
+  app:
+    image: ${IMAGE_NAME:-ghcr.io/owner/repo}:${IMAGE_TAG:-latest}
+    container_name: bunker-game
+    restart: unless-stopped
+    env_file:
+      - .env
+    network_mode: host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
