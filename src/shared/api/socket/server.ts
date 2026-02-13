@@ -263,6 +263,12 @@ export class SocketServer {
         this.io.to(`room:${room.code}`).emit('game:ended', {
           winners: remainingPlayers,
         });
+
+        setTimeout(() => {
+          this.cleanupFinishedRoom(room.id, room.code).catch((error) => {
+            console.error('Error cleaning finished room:', error);
+          });
+        }, 15000);
       } else {
         setTimeout(async () => {
           await this.startDiscussionRound(room.id, room.code);
@@ -287,6 +293,25 @@ export class SocketServer {
       clearTimeout(timer);
       this.roomCardRevealTimers.delete(roomId);
     }
+  }
+
+  private async cleanupFinishedRoom(roomId: number, roomCode: string) {
+    this.clearDiscussionTimer(roomId);
+    this.clearCardRevealTimer(roomId);
+    this.roomApocalypseOptions.delete(roomId);
+    this.roomLocationOptions.delete(roomId);
+
+    const players = await RoomService.getPlayers(roomId);
+    for (const player of players) {
+      const socketId = this.playerSockets.get(player.id);
+      if (socketId) {
+        this.socketPlayers.delete(socketId);
+      }
+      this.playerSockets.delete(player.id);
+    }
+
+    await GameService.cleanupRoomData(roomId);
+    this.io.in(`room:${roomCode}`).socketsLeave(`room:${roomCode}`);
   }
 
   private async emitRoomUpdate(roomId: number, roomCode: string) {
@@ -950,8 +975,8 @@ export class SocketServer {
         }
       });
 
-      socket.on('disconnect', async () => {
-        console.log('Client disconnected:', socket.id);
+      socket.on('disconnect', async (reason) => {
+        console.log('Client disconnected:', socket.id, 'reason:', reason);
 
         const disconnectedPlayerId = this.socketPlayers.get(socket.id) ?? null;
 
@@ -988,7 +1013,7 @@ export async function initializeSocketServer(req: NextApiRequest, res: NextApiRe
     console.log('Initializing Socket.IO server...');
 
     const io = new SocketIOServer(res.socket.server, {
-      path: '/api/socket',
+      path: '/api/socket-io',
       addTrailingSlash: false,
       cors: {
         origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',

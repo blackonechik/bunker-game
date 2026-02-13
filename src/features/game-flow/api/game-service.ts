@@ -8,6 +8,7 @@ import { PlayerCard } from '@/lib/entities/PlayerCard';
 import { ApocalypseVote } from '@/lib/entities/ApocalypseVote';
 import { LocationVote } from '@/lib/entities/LocationVote';
 import { Vote } from '@/lib/entities/Vote';
+import { ChatMessage } from '@/lib/entities/ChatMessage';
 import { selectRandom } from '@/shared/lib/game';
 import { RoomState, VoteType } from '@/shared/types';
 
@@ -248,5 +249,38 @@ export class GameService {
     const roomRepo = ds.getRepository(Room);
 
     await roomRepo.update(roomId, { state: RoomState.FINISHED });
+  }
+
+  static async cleanupRoomData(roomId: number) {
+    const ds = getDataSource();
+
+    await ds.transaction(async (manager) => {
+      const voteRepo = manager.getRepository(Vote);
+      const apocalypseVoteRepo = manager.getRepository(ApocalypseVote);
+      const locationVoteRepo = manager.getRepository(LocationVote);
+      const chatMessageRepo = manager.getRepository(ChatMessage);
+      const playerRepo = manager.getRepository(Player);
+      const playerCardRepo = manager.getRepository(PlayerCard);
+      const roomRepo = manager.getRepository(Room);
+
+      await voteRepo.delete({ roomId });
+      await apocalypseVoteRepo.delete({ roomId });
+      await locationVoteRepo.delete({ roomId });
+      await chatMessageRepo.delete({ roomId });
+
+      const roomPlayers = await playerRepo.find({ where: { roomId } });
+      const playerIds = roomPlayers.map((player) => player.id);
+
+      if (playerIds.length > 0) {
+        await playerCardRepo
+          .createQueryBuilder()
+          .delete()
+          .where('player_id IN (:...playerIds)', { playerIds })
+          .execute();
+      }
+
+      await playerRepo.delete({ roomId });
+      await roomRepo.delete({ id: roomId });
+    });
   }
 }

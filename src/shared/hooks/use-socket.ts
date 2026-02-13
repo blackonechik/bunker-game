@@ -20,7 +20,7 @@ export function useSocketEvent<T = any>(event: string, handler: (data: T) => voi
 }
 
 export function useSocketEmit() {
-  const { socket } = useSocket();
+  const { socket, ensureSocket, ensureSocketServer } = useSocket();
 
   const waitForConnection = (instance: Socket, timeoutMs: number): Promise<void> => {
     if (instance.connected) {
@@ -76,6 +76,8 @@ export function useSocketEmit() {
     const ackTimeoutMs = 8000;
     const maxAttempts = 2;
 
+    await ensureSocketServer();
+
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         await waitForConnection(instance, 10000);
@@ -116,11 +118,9 @@ export function useSocketEmit() {
 
   return {
     emit: <T = any>(event: string, data: any): Promise<T> => {
-      if (!socket) {
-        return Promise.reject(new Error('Socket not connected'));
-      }
+      const instance = socket ?? ensureSocket();
 
-      return emitWithAck<T>(socket, event, data);
+      return emitWithAck<T>(instance, event, data);
     },
   };
 }
