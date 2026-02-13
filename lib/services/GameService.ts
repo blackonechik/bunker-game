@@ -1,4 +1,4 @@
-import { getDataSource } from '../db/data-source';
+
 import { Apocalypse } from '../entities/Apocalypse';
 import { Location } from '../entities/Location';
 import { Card } from '../entities/Card';
@@ -10,6 +10,7 @@ import { LocationVote } from '../entities/LocationVote';
 import { Vote } from '../entities/Vote';
 import { selectRandom } from '../utils/game';
 import { RoomState, VoteType } from '../types';
+import { getDataSource } from '@/src/shared/api/db/data-source';
 
 export class GameService {
   static async startGame(roomId: number) {
