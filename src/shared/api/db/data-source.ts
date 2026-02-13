@@ -14,11 +14,11 @@ import { ChatMessage } from '@/lib/entities/ChatMessage';
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306'),
-  username: process.env.DB_USERNAME || 'bunker',
-  password: process.env.DB_PASSWORD || 'StrongPass123!',
-  database: process.env.DB_DATABASE || 'bunker_game',
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT!),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
   synchronize: process.env.NODE_ENV === 'development',
   logging: false,
   entities: [

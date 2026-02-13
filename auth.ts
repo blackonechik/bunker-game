@@ -3,11 +3,11 @@ import { nextCookies } from 'better-auth/next-js';
 import { createPool } from 'mysql2/promise';
 
 const pool = createPool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306', 10),
-  user: process.env.DB_USERNAME || process.env.DB_USER || 'bunker',
-  password: process.env.DB_PASSWORD || 'StrongPass123!',
-  database: process.env.DB_DATABASE || process.env.DB_NAME || 'bunker_game',
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT!, 10),
+  user: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
   connectionLimit: 10,
 });
 
