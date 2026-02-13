@@ -2,6 +2,37 @@ import { betterAuth } from 'better-auth';
 import { nextCookies } from 'better-auth/next-js';
 import { createPool } from 'mysql2/promise';
 
+const normalizeOrigin = (origin: string): string | null => {
+  const value = origin.trim();
+
+  if (!value) {
+    return null;
+  }
+
+  if (value.includes('*')) {
+    return value;
+  }
+
+  try {
+    return new URL(value).origin;
+  } catch {
+    return value.replace(/\/+$/, '');
+  }
+};
+
+const trustedOrigins = Array.from(
+  new Set(
+    [
+      process.env.NEXT_PUBLIC_APP_URL,
+      process.env.BETTER_AUTH_URL,
+      ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(',') ?? []),
+    ]
+      .filter((origin): origin is string => Boolean(origin))
+      .map(normalizeOrigin)
+      .filter((origin): origin is string => Boolean(origin))
+  )
+);
+
 const pool = createPool({
   host: process.env.DB_HOST,
   port: parseInt(process.env.DB_PORT!, 10),
@@ -38,9 +69,7 @@ export const auth = betterAuth({
           },
         }
       : {},
-  trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL, process.env.BETTER_AUTH_URL].filter(
-    (origin): origin is string => Boolean(origin)
-  ),
+  trustedOrigins,
   rateLimit: {
     enabled: true,
     window: 10,

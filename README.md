@@ -74,6 +74,7 @@ DB_DATABASE=bunker_game
 # Better Auth
 BETTER_AUTH_SECRET=replace_with_openssl_rand_base64_32
 BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_TRUSTED_ORIGINS=http://localhost:3000
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
@@ -116,6 +117,7 @@ DB_DATABASE=bunker_game
 # Better Auth
 BETTER_AUTH_SECRET=replace_with_openssl_rand_base64_32
 BETTER_AUTH_URL=https://your-domain.com
+BETTER_AUTH_TRUSTED_ORIGINS=https://your-domain.com
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 
