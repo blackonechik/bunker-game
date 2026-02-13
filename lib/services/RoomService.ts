@@ -1,4 +1,4 @@
-import { getDataSource } from '../db/data-source';
+
 import { Room } from '../entities/Room';
 import { Player } from '../entities/Player';
 import { Session } from '../entities/Session';
@@ -7,6 +7,7 @@ import { Location } from '../entities/Location';
 import { generateRoomCode } from '../utils/game';
 import { generateToken } from '../utils/jwt';
 import { RoomState } from '../types';
+import { getDataSource } from '@/src/shared/api/db/data-source';
 
 export class RoomService {
   static async createRoom(maxPlayers: number, hardcore: boolean, playerName: string) {
