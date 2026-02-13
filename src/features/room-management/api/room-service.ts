@@ -168,6 +168,13 @@ export class RoomService {
     await roomRepo.update(roomId, { state });
   }
 
+  static async updateRoundTimer(roomId: number, roundTimer: number | null) {
+    const ds = getDataSource();
+    const roomRepo = ds.getRepository(Room);
+
+    await roomRepo.update(roomId, { roundTimer: roundTimer ?? null });
+  }
+
   static async setPlayerOnline(playerId: number, isOnline: boolean) {
     const ds = getDataSource();
     const playerRepo = ds.getRepository(Player);

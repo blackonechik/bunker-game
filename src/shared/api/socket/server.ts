@@ -33,6 +33,10 @@ export class SocketServer {
   private socketPlayers: Map<string, number> = new Map();
   private roomApocalypseOptions: Map<number, ApocalypseDTO[]> = new Map();
   private roomLocationOptions: Map<number, LocationDTO[]> = new Map();
+  private roomDiscussionTimers: Map<number, NodeJS.Timeout> = new Map();
+  private finalizingApocalypseRooms: Set<number> = new Set();
+  private finalizingLocationRooms: Set<number> = new Set();
+  private finalizingPlayerVoteRounds: Set<string> = new Set();
 
   constructor(io: SocketIOServer) {
     this.io = io;
@@ -150,6 +154,212 @@ export class SocketServer {
       const target = this.getRandomItem(targets);
       await GameService.votePlayer(roomId, bot.id, target.id, round);
     }
+  }
+
+  private async runBotCardReveals(roomId: number, round: number, roomCode: string) {
+    const players = await RoomService.getPlayers(roomId);
+    const botPlayers = players.filter((player) => player.isBot && player.isAlive);
+
+    for (const bot of botPlayers) {
+      const hiddenCards = (bot.cards || []).filter((card) => !card.isRevealed);
+      if (hiddenCards.length === 0) {
+        continue;
+      }
+
+      const cardToReveal = this.getRandomItem(hiddenCards);
+      await GameService.revealCard(cardToReveal.id, round);
+
+      this.io.to(`room:${roomCode}`).emit('card:revealed', {
+        playerId: bot.id,
+        cardId: cardToReveal.id,
+      });
+    }
+  }
+
+  private async processPlayerVotingOutcome(roomId: number, roomCode: string, round: number) {
+    const finalizeKey = `${roomId}:${round}`;
+    if (this.finalizingPlayerVoteRounds.has(finalizeKey)) {
+      return;
+    }
+
+    const room = await RoomService.getRoom(roomId);
+    if (!room || room.state !== RoomState.VOTING || room.currentRound !== round) {
+      return;
+    }
+
+    const players = await RoomService.getPlayers(room.id);
+    const alivePlayers = players.filter((player) => player.isAlive);
+    const votes = await GameService.countPlayerVotes(room.id, round);
+
+    if (votes.reduce((sum, vote) => sum + parseInt(vote.count), 0) < alivePlayers.length) {
+      return;
+    }
+
+    this.finalizingPlayerVoteRounds.add(finalizeKey);
+
+    try {
+      const freshRoom = await RoomService.getRoom(room.id);
+      if (!freshRoom || freshRoom.state !== RoomState.VOTING || freshRoom.currentRound !== round) {
+        return;
+      }
+
+      const latestVotes = await GameService.countPlayerVotes(room.id, round);
+      if (latestVotes.length === 0) {
+        return;
+      }
+
+      const eliminatedId = parseInt(latestVotes[0].targetId);
+      await GameService.eliminatePlayer(eliminatedId);
+      await this.emitRoomUpdate(room.id, room.code);
+
+      this.io.to(`room:${room.code}`).emit('player:eliminated', {
+        playerId: eliminatedId,
+        votes: latestVotes,
+      });
+
+      const updatedPlayers = await RoomService.getPlayers(room.id);
+      const remainingPlayers = updatedPlayers.filter((player) => player.isAlive);
+
+      if (remainingPlayers.length <= 2) {
+        this.clearDiscussionTimer(room.id);
+        await RoomService.updateRoundTimer(room.id, null);
+        await RoomService.updateRoomState(room.id, RoomState.FINISHED);
+        await this.emitRoomUpdate(room.id, room.code);
+
+        this.io.to(`room:${room.code}`).emit('game:ended', {
+          winners: remainingPlayers,
+        });
+      } else {
+        setTimeout(async () => {
+          await this.startDiscussionRound(room.id, room.code);
+        }, 5000);
+      }
+    } finally {
+      this.finalizingPlayerVoteRounds.delete(finalizeKey);
+    }
+  }
+
+  private clearDiscussionTimer(roomId: number) {
+    const timer = this.roomDiscussionTimers.get(roomId);
+    if (timer) {
+      clearTimeout(timer);
+      this.roomDiscussionTimers.delete(roomId);
+    }
+  }
+
+  private async emitRoomUpdate(roomId: number, roomCode: string) {
+    const room = await RoomService.getRoom(roomId);
+    if (!room) {
+      return null;
+    }
+
+    const players = await RoomService.getPlayers(roomId);
+    this.io.to(`room:${roomCode}`).emit('room:update', { room, players });
+    return { room, players };
+  }
+
+  private async allAlivePlayersDoneReveal(roomId: number, round: number) {
+    const players = await RoomService.getPlayers(roomId);
+    const alivePlayers = players.filter((player) => player.isAlive);
+
+    return alivePlayers.every((alivePlayer) => {
+      const cards = alivePlayer.cards || [];
+      const hasHiddenCards = cards.some((card) => !card.isRevealed);
+
+      if (!hasHiddenCards) {
+        return true;
+      }
+
+      return cards.some((card) => card.revealedRound === round);
+    });
+  }
+
+  private async tryStartVotingPhase(roomId: number, roomCode: string, round: number) {
+    const room = await RoomService.getRoom(roomId);
+    if (!room || room.state !== RoomState.CARD_REVEAL) {
+      return false;
+    }
+
+    const readyToVote = await this.allAlivePlayersDoneReveal(roomId, round);
+    if (!readyToVote) {
+      return false;
+    }
+
+    await RoomService.updateRoomState(roomId, RoomState.VOTING);
+    await RoomService.updateRoundTimer(roomId, null);
+    await this.emitRoomUpdate(roomId, roomCode);
+
+    this.io.to(`room:${roomCode}`).emit('game:phase_changed', {
+      round,
+      state: RoomState.VOTING,
+    });
+
+    setTimeout(async () => {
+      const room = await RoomService.getRoom(roomId);
+      if (!room || room.state !== RoomState.VOTING || room.currentRound !== round) {
+        return;
+      }
+
+      const alivePlayers = (await RoomService.getPlayers(roomId)).filter((player) => player.isAlive);
+      await this.runBotPlayerVotes(roomId, round, alivePlayers);
+      await this.processPlayerVotingOutcome(roomId, roomCode, round);
+    }, 800);
+
+    return true;
+  }
+
+  private async moveToCardRevealPhase(roomId: number, roomCode: string, round: number) {
+    await RoomService.updateRoundTimer(roomId, null);
+    await RoomService.updateRoomState(roomId, RoomState.CARD_REVEAL);
+    await this.emitRoomUpdate(roomId, roomCode);
+
+    this.io.to(`room:${roomCode}`).emit('game:phase_changed', {
+      round,
+      state: RoomState.CARD_REVEAL,
+    });
+
+    setTimeout(async () => {
+      const room = await RoomService.getRoom(roomId);
+      if (!room || room.state !== RoomState.CARD_REVEAL || room.currentRound !== round) {
+        return;
+      }
+
+      await this.runBotCardReveals(roomId, round, roomCode);
+      await this.emitRoomUpdate(roomId, roomCode);
+      await this.tryStartVotingPhase(roomId, roomCode, round);
+    }, 1200);
+
+    await this.tryStartVotingPhase(roomId, roomCode, round);
+  }
+
+  private async startDiscussionRound(roomId: number, roomCode: string) {
+    await GameService.startRound(roomId);
+    const discussionEndsAt = Math.floor(Date.now() / 1000) + 60;
+    await RoomService.updateRoundTimer(roomId, discussionEndsAt);
+
+    const snapshot = await this.emitRoomUpdate(roomId, roomCode);
+    if (!snapshot) {
+      return;
+    }
+
+    const round = snapshot.room.currentRound;
+
+    this.io.to(`room:${roomCode}`).emit('game:round_start', {
+      round,
+      state: RoomState.DISCUSSION,
+      duration: 60,
+      endsAt: discussionEndsAt,
+    });
+
+    this.clearDiscussionTimer(roomId);
+    const timer = setTimeout(async () => {
+      try {
+        await this.moveToCardRevealPhase(roomId, roomCode, round);
+      } catch (error) {
+        console.error('Error moving to card reveal phase:', error);
+      }
+    }, 60000);
+    this.roomDiscussionTimers.set(roomId, timer);
   }
 
   private setupHandlers() {
@@ -276,6 +486,17 @@ export class SocketServer {
             }
           }
 
+          if (room.state === RoomState.DISCUSSION && typeof room.roundTimer === 'number') {
+            const currentSeconds = Math.floor(Date.now() / 1000);
+            const remainingSeconds = Math.max(0, room.roundTimer - currentSeconds);
+            socket.emit('game:timer_sync', {
+              round: room.currentRound,
+              state: RoomState.DISCUSSION,
+              remainingSeconds,
+              endsAt: room.roundTimer,
+            });
+          }
+
           callback({ success: true, data: { room, players, playerId: player.id } });
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Ошибка восстановления подключения';
@@ -351,6 +572,10 @@ export class SocketServer {
           const room = await RoomService.getRoom(player.roomId);
           if (!room) throw new Error('Комната не найдена');
 
+          if (room.state !== RoomState.WAITING) {
+            throw new Error('Игра уже запущена');
+          }
+
           if (room.hostPlayerId !== player.id) {
             throw new Error('Только хост может начать игру');
           }
@@ -424,10 +649,14 @@ export class SocketServer {
         try {
           const player = await this.getConnectedPlayer(socket);
 
-          await GameService.voteApocalypse(player.roomId, player.id, data.apocalypseId);
-
           const room = await RoomService.getRoom(player.roomId);
           if (!room) throw new Error('Комната не найдена');
+
+          if (room.state !== RoomState.APOCALYPSE_VOTE) {
+            throw new Error('Голосование за апокалипсис уже завершено');
+          }
+
+          await GameService.voteApocalypse(player.roomId, player.id, data.apocalypseId);
 
           const players = await RoomService.getPlayers(room.id);
           const votes = await GameService.countApocalypseVotes(room.id);
@@ -435,32 +664,58 @@ export class SocketServer {
           callback({ success: true });
 
           if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === players.length) {
-            const winnerId = parseInt(votes[0].apocalypseId);
-            this.roomApocalypseOptions.delete(room.id);
+            if (this.finalizingApocalypseRooms.has(room.id)) {
+              return;
+            }
 
-            this.io.to(`room:${room.code}`).emit('voting:apocalypse:complete', {
-              winnerId,
-              votes,
-            });
+            this.finalizingApocalypseRooms.add(room.id);
 
-            setTimeout(async () => {
-              await RoomService.updateRoomState(room.id, RoomState.LOCATION_VOTE);
-              const locations = await GameService.getRandomLocations(3);
-              this.roomLocationOptions.set(room.id, locations);
+            try {
+              const freshRoom = await RoomService.getRoom(room.id);
+              if (!freshRoom || freshRoom.state !== RoomState.APOCALYPSE_VOTE) {
+                return;
+              }
 
-              this.io.to(`room:${room.code}`).emit('location:options', { locations });
+              const latestVotes = await GameService.countApocalypseVotes(room.id);
+              if (latestVotes.length === 0) {
+                return;
+              }
+
+              const winnerId = parseInt(latestVotes[0].apocalypseId);
+              this.roomApocalypseOptions.delete(room.id);
+              await GameService.setApocalypse(room.id, winnerId);
+              await this.emitRoomUpdate(room.id, room.code);
+
+              this.io.to(`room:${room.code}`).emit('voting:apocalypse:complete', {
+                winnerId,
+                votes: latestVotes,
+              });
 
               setTimeout(async () => {
-                try {
-                  await this.runBotLocationVotes(
-                    room.id,
-                    locations.map((location) => location.id)
-                  );
-                } catch (error) {
-                  console.error('Error processing bot location votes:', error);
+                const actualRoom = await RoomService.getRoom(room.id);
+                if (!actualRoom || actualRoom.state !== RoomState.LOCATION_VOTE) {
+                  return;
                 }
-              }, 500);
-            }, 3000);
+
+                const locations = await GameService.getRandomLocations(3);
+                this.roomLocationOptions.set(room.id, locations);
+
+                this.io.to(`room:${room.code}`).emit('location:options', { locations });
+
+                setTimeout(async () => {
+                  try {
+                    await this.runBotLocationVotes(
+                      room.id,
+                      locations.map((location) => location.id)
+                    );
+                  } catch (error) {
+                    console.error('Error processing bot location votes:', error);
+                  }
+                }, 500);
+              }, 3000);
+            } finally {
+              this.finalizingApocalypseRooms.delete(room.id);
+            }
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Ошибка голосования';
@@ -472,10 +727,14 @@ export class SocketServer {
         try {
           const player = await this.getConnectedPlayer(socket);
 
-          await GameService.voteLocation(player.roomId, player.id, data.locationId);
-
           const room = await RoomService.getRoom(player.roomId);
           if (!room) throw new Error('Комната не найдена');
+
+          if (room.state !== RoomState.LOCATION_VOTE) {
+            throw new Error('Голосование за локацию уже завершено');
+          }
+
+          await GameService.voteLocation(player.roomId, player.id, data.locationId);
 
           const players = await RoomService.getPlayers(room.id);
           const votes = await GameService.countLocationVotes(room.id);
@@ -483,25 +742,46 @@ export class SocketServer {
           callback({ success: true });
 
           if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === players.length) {
-            const winnerId = parseInt(votes[0].locationId);
-            this.roomLocationOptions.delete(room.id);
+            if (this.finalizingLocationRooms.has(room.id)) {
+              return;
+            }
 
-            this.io.to(`room:${room.code}`).emit('voting:location:complete', {
-              winnerId,
-              votes,
-            });
+            this.finalizingLocationRooms.add(room.id);
 
-            setTimeout(async () => {
-              await RoomService.updateRoomState(room.id, RoomState.DEALING);
-              await GameService.dealCards(room.id);
+            try {
+              const freshRoom = await RoomService.getRoom(room.id);
+              if (!freshRoom || freshRoom.state !== RoomState.LOCATION_VOTE) {
+                return;
+              }
 
-              await RoomService.updateRoomState(room.id, RoomState.DISCUSSION);
+              const latestVotes = await GameService.countLocationVotes(room.id);
+              if (latestVotes.length === 0) {
+                return;
+              }
 
-              this.io.to(`room:${room.code}`).emit('game:round_start', {
-                round: 1,
-                state: RoomState.DISCUSSION,
+              const winnerId = parseInt(latestVotes[0].locationId);
+              this.roomLocationOptions.delete(room.id);
+              await GameService.setLocation(room.id, winnerId);
+              await this.emitRoomUpdate(room.id, room.code);
+
+              this.io.to(`room:${room.code}`).emit('voting:location:complete', {
+                winnerId,
+                votes: latestVotes,
               });
-            }, 3000);
+
+              setTimeout(async () => {
+                const actualRoom = await RoomService.getRoom(room.id);
+                if (!actualRoom || actualRoom.state !== RoomState.DEALING) {
+                  return;
+                }
+
+                await GameService.dealCards(room.id);
+                await this.emitRoomUpdate(room.id, room.code);
+                await this.startDiscussionRound(room.id, room.code);
+              }, 3000);
+            } finally {
+              this.finalizingLocationRooms.delete(room.id);
+            }
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Ошибка голосования';
@@ -516,6 +796,30 @@ export class SocketServer {
           const room = await RoomService.getRoom(player.roomId);
           if (!room) throw new Error('Комната не найдена');
 
+          if (room.state !== RoomState.CARD_REVEAL) {
+            throw new Error('Сейчас нельзя раскрывать карты');
+          }
+
+          const players = await RoomService.getPlayers(room.id);
+          const currentPlayer = players.find((roomPlayer) => roomPlayer.id === player.id);
+          const playerCard = currentPlayer?.cards?.find((card) => card.id === data.cardId);
+
+          if (!playerCard) {
+            throw new Error('Карта не принадлежит игроку');
+          }
+
+          if (playerCard.isRevealed) {
+            throw new Error('Карта уже раскрыта');
+          }
+
+          const alreadyRevealedThisRound = currentPlayer?.cards?.some(
+            (card) => card.revealedRound === room.currentRound
+          );
+
+          if (alreadyRevealedThisRound) {
+            throw new Error('Можно раскрыть только одну карту за раунд');
+          }
+
           await GameService.revealCard(data.cardId, room.currentRound);
 
           callback({ success: true });
@@ -524,6 +828,9 @@ export class SocketServer {
             playerId: player.id,
             cardId: data.cardId,
           });
+
+          await this.emitRoomUpdate(room.id, room.code);
+          await this.tryStartVotingPhase(room.id, room.code, room.currentRound);
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Ошибка раскрытия карты';
           callback({ success: false, error: message });
@@ -537,47 +844,14 @@ export class SocketServer {
           const room = await RoomService.getRoom(player.roomId);
           if (!room) throw new Error('Комната не найдена');
 
+          if (room.state !== RoomState.VOTING) {
+            throw new Error('Сейчас нельзя голосовать за исключение');
+          }
+
           await GameService.votePlayer(room.id, player.id, data.targetPlayerId, room.currentRound);
 
-          const alivePlayers = (await RoomService.getPlayers(room.id)).filter((p) => p.isAlive);
-          await this.runBotPlayerVotes(room.id, room.currentRound, alivePlayers);
-
           callback({ success: true });
-
-          const players = await RoomService.getPlayers(room.id);
-          const alivePlayersAfterVotes = players.filter((p) => p.isAlive);
-          const votes = await GameService.countPlayerVotes(room.id, room.currentRound);
-
-          if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === alivePlayersAfterVotes.length) {
-            const eliminatedId = parseInt(votes[0].targetId);
-            await GameService.eliminatePlayer(eliminatedId);
-
-            this.io.to(`room:${room.code}`).emit('player:eliminated', {
-              playerId: eliminatedId,
-              votes,
-            });
-
-            const remainingPlayers = players.filter(p => p.isAlive && p.id !== eliminatedId);
-            const location = room.location;
-
-            if (location && remainingPlayers.length <= location.capacity) {
-              await RoomService.updateRoomState(room.id, RoomState.FINISHED);
-
-              this.io.to(`room:${room.code}`).emit('game:ended', {
-                winners: remainingPlayers,
-              });
-            } else {
-              setTimeout(async () => {
-                const newRound = room.currentRound + 1;
-                await RoomService.updateRoomState(room.id, RoomState.DISCUSSION);
-
-                this.io.to(`room:${room.code}`).emit('game:round_start', {
-                  round: newRound,
-                  state: RoomState.DISCUSSION,
-                });
-              }, 5000);
-            }
-          }
+          await this.processPlayerVotingOutcome(room.id, room.code, room.currentRound);
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Ошибка голосования';
           callback({ success: false, error: message });

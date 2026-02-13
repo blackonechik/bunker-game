@@ -77,6 +77,7 @@ export interface PlayerCardDTO {
   id: number;
   cardId: number;
   isRevealed: boolean;
+  revealedRound?: number;
   card: CardDTO;
 }
 
@@ -94,6 +95,7 @@ export interface RoomDTO {
   state: RoomState;
   maxPlayers: number;
   currentRound: number;
+  roundTimer?: number | null;
   players: PlayerDTO[];
   apocalypse?: ApocalypseDTO;
   location?: LocationDTO;
