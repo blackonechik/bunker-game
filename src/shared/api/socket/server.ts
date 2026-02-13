@@ -1006,17 +1006,37 @@ export class SocketServer {
   }
 }
 
+const FALLBACK_APP_URL = 'https://bunker.blackone.pro';
+
+function getAllowedOrigins() {
+  const origins = Array.from(
+    new Set(
+      [
+        process.env.NEXT_PUBLIC_APP_URL,
+        process.env.BETTER_AUTH_URL,
+        ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(',') ?? []),
+      ]
+        .map((origin) => origin?.trim())
+        .filter((origin): origin is string => Boolean(origin))
+    )
+  );
+
+  return origins.length > 0 ? origins : [FALLBACK_APP_URL];
+}
+
 export async function initializeSocketServer(req: NextApiRequest, res: NextApiResponseWithSocket) {
   await initializeDatabase();
 
   if (!res.socket.server.io) {
     console.log('Initializing Socket.IO server...');
 
+    const allowedOrigins = getAllowedOrigins();
+
     const io = new SocketIOServer(res.socket.server, {
       path: '/api/socket-io',
       addTrailingSlash: false,
       cors: {
-        origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+        origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
         methods: ['GET', 'POST'],
         credentials: true,
       },

@@ -24,6 +24,19 @@ const SocketContext = createContext<SocketContextType>({
 
 let socketInstance: Socket | null = null;
 let socketServerInitPromise: Promise<void> | null = null;
+const FALLBACK_APP_URL = 'https://bunker.blackone.pro';
+
+function getSocketServerUrl() {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+
+  return FALLBACK_APP_URL;
+}
 
 async function initializeSocketServerIfNeeded() {
   if (!socketServerInitPromise) {
@@ -43,7 +56,7 @@ async function initializeSocketServerIfNeeded() {
 
 function createSocketInstance() {
   if (!socketInstance) {
-    socketInstance = io(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', {
+    socketInstance = io(getSocketServerUrl(), {
       path: '/api/socket-io',
       addTrailingSlash: false,
       withCredentials: true,
