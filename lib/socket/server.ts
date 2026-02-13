@@ -2,7 +2,7 @@ import { Server as NetServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { NextApiRequest } from 'next';
 import { NextApiResponse } from 'next';
-import { initializeDatabase } from '../db/data-source';
+import { initializeDatabase } from '@/shared/api/db/data-source';
 import { RoomService } from '../services/RoomService';
 import { GameService } from '../services/GameService';
 import { verifyToken } from '../utils/jwt';
@@ -157,7 +157,7 @@ export class SocketServer {
           callback({ success: true });
 
           // Проверяем, все ли проголосовали
-          if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === players.length) {
+          if (votes.reduce((sum: number, v: { count: string }) => sum + parseInt(v.count), 0) === players.length) {
             // Все проголосовали, определяем победителя
             const winnerId = parseInt(votes[0].apocalypseId);
             
@@ -197,7 +197,7 @@ export class SocketServer {
           callback({ success: true });
 
           // Проверяем, все ли проголосовали
-          if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === players.length) {
+          if (votes.reduce((sum: number, v: { count: string }) => sum + parseInt(v.count), 0) === players.length) {
             const winnerId = parseInt(votes[0].locationId);
             
             this.io.to(`room:${room.code}`).emit('voting:location:complete', {
@@ -263,11 +263,11 @@ export class SocketServer {
           callback({ success: true });
 
           const players = await RoomService.getPlayers(room.id);
-          const alivePlayers = players.filter(p => p.isAlive);
+          const alivePlayers = players.filter((p: { isAlive: boolean }) => p.isAlive);
           const votes = await GameService.countPlayerVotes(room.id, room.currentRound);
 
           // Проверяем, все ли проголосовали
-          if (votes.reduce((sum, v) => sum + parseInt(v.count), 0) === alivePlayers.length) {
+          if (votes.reduce((sum: number, v: { count: string }) => sum + parseInt(v.count), 0) === alivePlayers.length) {
             // Определяем исключенного
             const eliminatedId = parseInt(votes[0].targetId);
             await GameService.eliminatePlayer(eliminatedId);
@@ -278,7 +278,7 @@ export class SocketServer {
             });
 
             // Проверяем условие окончания игры
-            const remainingPlayers = players.filter(p => p.isAlive && p.id !== eliminatedId);
+            const remainingPlayers = players.filter((p: { isAlive: boolean; id: number }) => p.isAlive && p.id !== eliminatedId);
             if (remainingPlayers.length <= 2) {
               // Игра окончена
               await RoomService.updateRoomState(room.id, RoomState.FINISHED);

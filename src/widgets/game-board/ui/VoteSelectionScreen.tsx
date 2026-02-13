@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/src/shared/ui';
+import { Title } from '@/src/shared/ui/title';
 
 interface VoteOptionItem {
 	id: number;
@@ -11,7 +12,6 @@ interface VoteOptionItem {
 
 interface VoteSelectionScreenProps {
 	title: string;
-	accentText: string;
 	options: VoteOptionItem[];
 	onSelect: (id: number) => void;
 	mode: 'apocalypse' | 'location';
@@ -36,7 +36,6 @@ const APPEARANCE = {
 
 export function VoteSelectionScreen({
 	title,
-	accentText,
 	options,
 	onSelect,
 	mode,
@@ -46,19 +45,20 @@ export function VoteSelectionScreen({
 	return (
 		<div className="relative z-10 container mx-auto px-6 py-12">
 			<div className="mb-12 text-center">
-				<h2 className="text-4xl md:text-6xl font-black uppercase text-zinc-100 mb-2">
-					{title} <span className="text-orange-600">{accentText}</span>
-				</h2>
+				<Title className="mb-4">
+					Выберите {title}
+				</Title>
 			</div>
 
-			<section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+			<section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 				{options.map((option) => (
 					<article
 						key={option.id}
-						className={`relative bg-zinc-900 border-2 border-zinc-800 p-2 transition-all duration-300 ${appearance.hoverBorder}`}
+						className={`group
+							 relative bg-zinc-900 border-2 border-zinc-800 p-2 transition-all duration-300 ${appearance.hoverBorder}`}
 					>
 
-						<div className=" h-64 border border-zinc-800">
+						<div className="overflow-hidden h-64 border border-zinc-800">
 							{/* eslint-disable-next-line @next/next/no-img-element */}
 							<img
 								src={option.image || 'https://images.unsplash.com/photo-1523575708161-ad0fc2a9b951?auto=format&fit=crop&q=80&w=1200'}

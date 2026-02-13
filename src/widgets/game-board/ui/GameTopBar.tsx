@@ -8,6 +8,9 @@ interface GameTopBarProps {
   timer: number;
   apocalypseName?: string;
   locationName?: string;
+  gameDurationSeconds: number;
+  alivePlayersCount: number;
+  totalPlayersCount: number;
 }
 
 const DISCUSSION_DURATION = 60;
@@ -25,7 +28,20 @@ const phaseLabelMap: Record<RoomState, string> = {
   [RoomState.FINISHED]: 'Игра завершена',
 };
 
-export function GameTopBar({ round, state, timer, apocalypseName, locationName }: GameTopBarProps) {
+function formatDuration(seconds: number) {
+  const safeSeconds = Math.max(0, seconds);
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const secs = safeSeconds % 60;
+
+  if (hours > 0) {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+
+  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+export function GameTopBar({ round, state, timer, apocalypseName, locationName, gameDurationSeconds, alivePlayersCount, totalPlayersCount }: GameTopBarProps) {
   const normalizedTimer = Math.max(0, Math.min(DISCUSSION_DURATION, timer));
   const progress = (normalizedTimer / DISCUSSION_DURATION) * 100;
   const radius = 44;
@@ -64,6 +80,16 @@ export function GameTopBar({ round, state, timer, apocalypseName, locationName }
       </div>
 
       <div className="flex gap-6 items-center bg-black border border-zinc-700 px-6 py-3 rounded-md min-w-[300px]">
+        <div className="text-center">
+          <p className="text-[10px] uppercase text-zinc-500">Длительность игры</p>
+          <p className="text-sm font-bold text-orange-400">{formatDuration(gameDurationSeconds)}</p>
+        </div>
+        <div className="h-10 w-[1px] bg-zinc-700" />
+        <div className="text-center">
+          <p className="text-[10px] uppercase text-zinc-500">Выжившие</p>
+          <p className="text-sm font-bold text-emerald-400">{alivePlayersCount} / {Math.max(totalPlayersCount, 1)}</p>
+        </div>
+        <div className="h-10 w-[1px] bg-zinc-700" />
         <div className="text-center">
           <p className="text-[10px] uppercase text-zinc-500">Апокалипсис</p>
           <p className="text-sm font-bold text-red-500">{apocalypseName || 'Не выбран'}</p>

@@ -96,6 +96,7 @@ export interface RoomDTO {
   state: RoomState;
   maxPlayers: number;
   currentRound: number;
+  startedAt?: string | Date | null;
   roundTimer?: number | null;
   players: PlayerDTO[];
   apocalypse?: ApocalypseDTO;

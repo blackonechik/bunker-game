@@ -31,6 +31,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   const [apocalypseOptions, setApocalypseOptions] = useState<ApocalypseDTO[]>([]);
   const [locationOptions, setLocationOptions] = useState<LocationDTO[]>([]);
   const [winners, setWinners] = useState<PlayerDTO[]>([]);
+  const [nowTimestamp, setNowTimestamp] = useState<number>(() => Date.now());
 
   const resumeAttemptedRef = useRef(false);
   const systemMessageKeysRef = useRef<Set<string>>(new Set());
@@ -41,6 +42,9 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     null;
   const currentPlayerId = currentPlayer?.id;
   const currentRound = room?.currentRound || 1;
+  const gameStartedAtMs = room?.startedAt ? new Date(room.startedAt).getTime() : null;
+  const gameDurationSeconds = gameStartedAtMs ? Math.max(0, Math.floor((nowTimestamp - gameStartedAtMs) / 1000)) : 0;
+  const alivePlayersCount = players.filter((player) => player.isAlive).length;
 
   const hasRevealedThisRound =
     currentPlayer?.cards?.some((card) => card.revealedRound === currentRound) || false;
@@ -79,6 +83,16 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
       resumeAttemptedRef.current = false;
     }
   }, [isConnected]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setNowTimestamp(Date.now());
+    }, 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
 
   useEffect(() => {
     if (!code) return;
@@ -361,8 +375,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   if (room?.state === RoomState.APOCALYPSE_VOTE && apocalypseOptions.length > 0) {
     return (
       <VoteSelectionScreen
-        title="Select"
-        accentText="Apocalypse"
+        title="Аппокалипсис"
         options={apocalypseOptions}
         onSelect={handleVoteApocalypse}
         mode="apocalypse"
@@ -373,8 +386,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   if (room?.state === RoomState.LOCATION_VOTE && locationOptions.length > 0) {
     return (
       <VoteSelectionScreen
-        title="Select Deployment"
-        accentText="Site"
+        title="Локацию"
         options={locationOptions}
         onSelect={handleVoteLocation}
         mode="location"
@@ -397,6 +409,9 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
         timer={timer}
         apocalypseName={apocalypse?.name}
         locationName={location?.name}
+        gameDurationSeconds={gameDurationSeconds}
+        alivePlayersCount={alivePlayersCount}
+        totalPlayersCount={players.length}
       />
 
       <main className="relative z-20 py-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
