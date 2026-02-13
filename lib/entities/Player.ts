@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToMany, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToMany, OneToOne, JoinColumn, Relation } from 'typeorm';
 import { Room } from './Room';
 import { PlayerCard } from './PlayerCard';
 import { Session } from './Session';
@@ -34,11 +34,11 @@ export class Player {
 
   @ManyToOne(() => Room, (room) => room.players, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'room_id' })
-  room!: Room;
+  room!: Relation<Room>;
 
   @OneToMany(() => PlayerCard, (playerCard) => playerCard.player)
-  cards!: PlayerCard[];
+  cards!: Relation<PlayerCard[]>;
 
   @OneToOne(() => Session, (session) => session.player)
-  session?: Session;
+  session?: Relation<Session>;
 }

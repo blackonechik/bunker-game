@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, ManyToOne, JoinColumn, Relation } from 'typeorm';
 import { Apocalypse } from './Apocalypse';
 import { Location } from './Location';
 import { RoomState } from '../types';
@@ -47,13 +47,13 @@ export class Room {
   roundTimer?: number | null;
 
   @OneToMany(() => Player, (player) => player.room)
-  players!: Player[];
+  players!: Relation<Player[]>;
 
   @ManyToOne(() => Apocalypse, { eager: true })
   @JoinColumn({ name: 'apocalypse_id' })
-  apocalypse?: Apocalypse;
+  apocalypse?: Relation<Apocalypse>;
 
   @ManyToOne(() => Location, { eager: true })
   @JoinColumn({ name: 'location_id' })
-  location?: Location;
+  location?: Relation<Location>;
 }

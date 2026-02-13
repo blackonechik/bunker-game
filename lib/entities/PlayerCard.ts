@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Relation } from 'typeorm';
 import { Card } from './Card';
 import { Player } from './Player';
 
@@ -24,9 +24,9 @@ export class PlayerCard {
 
   @ManyToOne(() => Player, (player) => player.cards, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'player_id' })
-  player!: Player;
+  player!: Relation<Player>;
 
   @ManyToOne(() => Card, { eager: true })
   @JoinColumn({ name: 'card_id' })
-  card!: Card;
+  card!: Relation<Card>;
 }

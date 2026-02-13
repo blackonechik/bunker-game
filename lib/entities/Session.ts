@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, UpdateDateColumn, Relation } from 'typeorm';
 import { Player } from './Player';
 
 @Entity('sessions')
@@ -20,5 +20,5 @@ export class Session {
 
   @OneToOne(() => Player, (player) => player.session, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'player_id' })
-  player!: Player;
+  player!: Relation<Player>;
 }
