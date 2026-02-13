@@ -1,28 +1,25 @@
-FROM node:20-alpine AS deps
+# Базовый образ с Node.js 20
+FROM node:20-alpine
+
+# Устанавливаем рабочую директорию
 WORKDIR /app
+
+# Копируем package.json и package-lock.json для установки зависимостей
 COPY package*.json ./
+
+# Устанавливаем зависимости
 RUN npm ci
 
-FROM node:20-alpine AS builder
-WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
-COPY --from=deps /app/node_modules ./node_modules
+# Копируем весь проект
 COPY . .
+
+# Собираем Next.js
 RUN npm run build
 
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+# Устанавливаем порт, который слушает приложение
 ENV PORT=3000
 
-RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
-
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-
-USER nextjs
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+# Запуск приложения
+CMD ["npm", "run", "start", "--", "-H", "0.0.0.0", "-p", "3000"]
