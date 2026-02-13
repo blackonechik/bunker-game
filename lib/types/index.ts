@@ -106,17 +106,14 @@ export interface ApocalypseDTO {
   id: number;
   name: string;
   description: string;
-  hazardLevel: string;
-  duration: string;
+  image: string;
 }
 
 export interface LocationDTO {
   id: number;
   name: string;
-  capacity: number;
-  supplies: string[];
-  condition: string;
   description: string;
+  image: string;
 }
 
 export interface ChatMessageDTO {

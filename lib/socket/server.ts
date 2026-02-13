@@ -279,9 +279,7 @@ export class SocketServer {
 
             // Проверяем условие окончания игры
             const remainingPlayers = players.filter(p => p.isAlive && p.id !== eliminatedId);
-            const location = room.location;
-
-            if (location && remainingPlayers.length <= location.capacity) {
+            if (remainingPlayers.length <= 2) {
               // Игра окончена
               await RoomService.updateRoomState(room.id, RoomState.FINISHED);
               

@@ -8,15 +8,9 @@ export class Location {
   @Column({ length: 100 })
   name!: string;
 
-  @Column()
-  capacity!: number;
-
-  @Column({ type: 'simple-json' })
-  supplies!: string[];
-
-  @Column({ length: 50 })
-  condition!: string;
-
   @Column({ type: 'text' })
   description!: string;
+
+  @Column({ length: 2048, nullable: true })
+  image!: string;
 }

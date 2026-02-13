@@ -10,8 +10,7 @@ interface ApocalypseRecord {
   id: number;
   name: string;
   description: string;
-  hazardLevel: string;
-  duration: string;
+  image: string;
 }
 
 interface CardRecord {
@@ -25,10 +24,8 @@ interface CardRecord {
 interface LocationRecord {
   id: number;
   name: string;
-  capacity: number;
-  supplies: string[];
-  condition: string;
   description: string;
+  image: string;
 }
 
 interface EntityState {
@@ -53,8 +50,7 @@ export default function AdminPanelClient() {
   const [apocalypseForm, setApocalypseForm] = useState({
     name: '',
     description: '',
-    hazardLevel: '',
-    duration: '',
+    image: '',
   });
 
   const [cardForm, setCardForm] = useState({
@@ -66,10 +62,8 @@ export default function AdminPanelClient() {
 
   const [locationForm, setLocationForm] = useState({
     name: '',
-    capacity: '10',
-    supplies: '',
-    condition: '',
     description: '',
+    image: '',
   });
 
   const currentRows = useMemo(() => data[activeEntity], [data, activeEntity]);
@@ -102,9 +96,9 @@ export default function AdminPanelClient() {
 
   const resetForms = () => {
     setEditingId(null);
-    setApocalypseForm({ name: '', description: '', hazardLevel: '', duration: '' });
+    setApocalypseForm({ name: '', description: '', image: '' });
     setCardForm({ type: CardType.PROFESSION, value: '', description: '', rarity: '' });
-    setLocationForm({ name: '', capacity: '10', supplies: '', condition: '', description: '' });
+    setLocationForm({ name: '', description: '', image: '' });
   };
 
   const toPayload = () => {
@@ -112,8 +106,7 @@ export default function AdminPanelClient() {
       return {
         name: apocalypseForm.name,
         description: apocalypseForm.description,
-        hazardLevel: apocalypseForm.hazardLevel,
-        duration: apocalypseForm.duration,
+        image: apocalypseForm.image,
       };
     }
 
@@ -128,13 +121,8 @@ export default function AdminPanelClient() {
 
     return {
       name: locationForm.name,
-      capacity: Number(locationForm.capacity),
-      supplies: locationForm.supplies
-        .split(',')
-        .map((item) => item.trim())
-        .filter((item) => item.length > 0),
-      condition: locationForm.condition,
       description: locationForm.description,
+      image: locationForm.image,
     };
   };
 
@@ -177,8 +165,7 @@ export default function AdminPanelClient() {
       setApocalypseForm({
         name: row.name,
         description: row.description,
-        hazardLevel: row.hazardLevel,
-        duration: row.duration,
+        image: row.image,
       });
       return;
     }
@@ -197,10 +184,8 @@ export default function AdminPanelClient() {
     const row = record as LocationRecord;
     setLocationForm({
       name: row.name,
-      capacity: String(row.capacity),
-      supplies: row.supplies.join(', '),
-      condition: row.condition,
       description: row.description,
+      image: row.image,
     });
   };
 
@@ -318,8 +303,7 @@ export default function AdminPanelClient() {
         {activeEntity === 'apocalypses' && (
           <div className="grid gap-3">
             <input className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 text-zinc-200" placeholder="Название" value={apocalypseForm.name} onChange={(event) => setApocalypseForm((prev) => ({ ...prev, name: event.target.value }))} />
-            <input className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 text-zinc-200" placeholder="Опасность" value={apocalypseForm.hazardLevel} onChange={(event) => setApocalypseForm((prev) => ({ ...prev, hazardLevel: event.target.value }))} />
-            <input className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 text-zinc-200" placeholder="Длительность" value={apocalypseForm.duration} onChange={(event) => setApocalypseForm((prev) => ({ ...prev, duration: event.target.value }))} />
+            <input className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 text-zinc-200" placeholder="URL изображения" value={apocalypseForm.image} onChange={(event) => setApocalypseForm((prev) => ({ ...prev, image: event.target.value }))} />
             <textarea className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 text-zinc-200 min-h-24" placeholder="Описание" value={apocalypseForm.description} onChange={(event) => setApocalypseForm((prev) => ({ ...prev, description: event.target.value }))} />
           </div>
         )}
@@ -340,9 +324,7 @@ export default function AdminPanelClient() {
         {activeEntity === 'locations' && (
           <div className="grid gap-3">
             <input className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 text-zinc-200" placeholder="Название" value={locationForm.name} onChange={(event) => setLocationForm((prev) => ({ ...prev, name: event.target.value }))} />
-            <input type="number" className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 text-zinc-200" placeholder="Вместимость" value={locationForm.capacity} onChange={(event) => setLocationForm((prev) => ({ ...prev, capacity: event.target.value }))} />
-            <input className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 text-zinc-200" placeholder="Состояние" value={locationForm.condition} onChange={(event) => setLocationForm((prev) => ({ ...prev, condition: event.target.value }))} />
-            <input className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 text-zinc-200" placeholder="Ресурсы (через запятую)" value={locationForm.supplies} onChange={(event) => setLocationForm((prev) => ({ ...prev, supplies: event.target.value }))} />
+            <input className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 text-zinc-200" placeholder="URL изображения" value={locationForm.image} onChange={(event) => setLocationForm((prev) => ({ ...prev, image: event.target.value }))} />
             <textarea className="w-full px-4 py-3 bg-zinc-800 border-2 border-zinc-700 text-zinc-200 min-h-24" placeholder="Описание" value={locationForm.description} onChange={(event) => setLocationForm((prev) => ({ ...prev, description: event.target.value }))} />
           </div>
         )}
@@ -383,7 +365,7 @@ export default function AdminPanelClient() {
                     <div className="space-y-1 text-zinc-300">
                       <div className="font-bold">{(row as ApocalypseRecord).name}</div>
                       <div>{(row as ApocalypseRecord).description}</div>
-                      <div className="text-xs text-zinc-500">Опасность: {(row as ApocalypseRecord).hazardLevel} • Длительность: {(row as ApocalypseRecord).duration}</div>
+                      <div className="text-xs text-zinc-500 break-all">Изображение: {(row as ApocalypseRecord).image}</div>
                     </div>
                   )}
 
@@ -399,7 +381,7 @@ export default function AdminPanelClient() {
                     <div className="space-y-1 text-zinc-300">
                       <div className="font-bold">{(row as LocationRecord).name}</div>
                       <div>{(row as LocationRecord).description}</div>
-                      <div className="text-xs text-zinc-500">Вместимость: {(row as LocationRecord).capacity} • Ресурсы: {(row as LocationRecord).supplies.join(', ') || '-'}</div>
+                      <div className="text-xs text-zinc-500 break-all">Изображение: {(row as LocationRecord).image}</div>
                     </div>
                   )}
                 </td>

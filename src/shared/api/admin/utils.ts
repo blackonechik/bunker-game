@@ -77,21 +77,18 @@ export function validateApocalypsePayload(payload: unknown): { valid: true; data
   const source = payload as Record<string, unknown>;
   const name = typeof source.name === 'string' ? source.name.trim() : '';
   const description = typeof source.description === 'string' ? source.description.trim() : '';
-  const hazardLevel = typeof source.hazardLevel === 'string' ? source.hazardLevel.trim() : '';
-  const duration = typeof source.duration === 'string' ? source.duration.trim() : '';
+  const image = typeof source.image === 'string' ? source.image.trim() : '';
 
   if (!name) return { valid: false, error: 'Поле name обязательно' };
   if (!description) return { valid: false, error: 'Поле description обязательно' };
-  if (!hazardLevel) return { valid: false, error: 'Поле hazardLevel обязательно' };
-  if (!duration) return { valid: false, error: 'Поле duration обязательно' };
+  if (!image) return { valid: false, error: 'Поле image обязательно' };
 
   return {
     valid: true,
     data: {
       name,
       description,
-      hazardLevel,
-      duration,
+      image,
     },
   };
 }
@@ -133,32 +130,19 @@ export function validateLocationPayload(payload: unknown): { valid: true; data: 
 
   const source = payload as Record<string, unknown>;
   const name = typeof source.name === 'string' ? source.name.trim() : '';
-  const capacityRaw = source.capacity;
-  const condition = typeof source.condition === 'string' ? source.condition.trim() : '';
   const description = typeof source.description === 'string' ? source.description.trim() : '';
-
-  let supplies: string[] = [];
-  if (Array.isArray(source.supplies)) {
-    supplies = source.supplies
-      .map((item) => (typeof item === 'string' ? item.trim() : ''))
-      .filter((item) => item.length > 0);
-  }
+  const image = typeof source.image === 'string' ? source.image.trim() : '';
 
   if (!name) return { valid: false, error: 'Поле name обязательно' };
-  if (!Number.isInteger(capacityRaw) || (capacityRaw as number) <= 0) {
-    return { valid: false, error: 'Поле capacity должно быть целым числом > 0' };
-  }
-  if (!condition) return { valid: false, error: 'Поле condition обязательно' };
   if (!description) return { valid: false, error: 'Поле description обязательно' };
+  if (!image) return { valid: false, error: 'Поле image обязательно' };
 
   return {
     valid: true,
     data: {
       name,
-      capacity: capacityRaw as number,
-      supplies,
-      condition,
       description,
+      image,
     },
   };
 }

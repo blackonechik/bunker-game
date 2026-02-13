@@ -4,3 +4,4 @@ export { PlayersGrid } from './ui/PlayersGrid';
 export { PlayerCardsList } from './ui/PlayerCardsList';
 export { MyCardsHud } from './ui/MyCardsHud';
 export { VictoryScreen } from './ui/VictoryScreen';
+export { VoteSelectionScreen } from './ui/VoteSelectionScreen';

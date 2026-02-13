@@ -6,7 +6,7 @@ import { useSession } from '@/shared/lib/auth-client';
 import { useSocket } from '@/app/providers/socket-provider';
 import { useSocketEvent, useSocketEmit } from '@/shared/hooks/use-socket';
 import { PlayerDTO, RoomDTO, RoomState, ChatMessageDTO, ApocalypseDTO, LocationDTO } from '@/shared/types';
-import { GameTopBar, SystemLogPanel, PlayersGrid, MyCardsHud, VictoryScreen } from '@/widgets/game-board';
+import { GameTopBar, SystemLogPanel, PlayersGrid, MyCardsHud, VictoryScreen, VoteSelectionScreen } from '@/widgets/game-board';
 
 interface RoundStartPayload {
   round: number;
@@ -360,72 +360,25 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
 
   if (room?.state === RoomState.APOCALYPSE_VOTE && apocalypseOptions.length > 0) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-200 font-mono p-8">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-black uppercase italic mb-8 text-center">Выберите Апокалипсис</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {apocalypseOptions.map((apocalypseOption) => (
-              <motion.div
-                key={apocalypseOption.id}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleVoteApocalypse(apocalypseOption.id)}
-                className="relative bg-zinc-900 border-4 border-red-900 p-8 cursor-pointer hover:border-red-500 transition-colors"
-              >
-                <h3 className="text-3xl font-black uppercase italic mb-4">{apocalypseOption.name}</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed mb-6 uppercase tracking-tight">
-                  {apocalypseOption.description}
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  <span className="px-3 py-1 bg-red-900 text-red-400 text-[10px] border border-red-800 uppercase font-bold">
-                    {apocalypseOption.hazardLevel}
-                  </span>
-                  <span className="px-3 py-1 bg-zinc-800 text-zinc-400 text-[10px] border border-zinc-700 uppercase font-bold">
-                    {apocalypseOption.duration}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <VoteSelectionScreen
+        title="Select"
+        accentText="Apocalypse"
+        options={apocalypseOptions}
+        onSelect={handleVoteApocalypse}
+        mode="apocalypse"
+      />
     );
   }
 
   if (room?.state === RoomState.LOCATION_VOTE && locationOptions.length > 0) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-200 font-mono p-8">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-black uppercase italic mb-8 text-center">Выберите Локацию</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {locationOptions.map((locationOption) => (
-              <motion.div
-                key={locationOption.id}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleVoteLocation(locationOption.id)}
-                className="relative bg-zinc-900 border-4 border-blue-900 p-8 cursor-pointer hover:border-blue-500 transition-colors"
-              >
-                <h3 className="text-3xl font-black uppercase italic mb-4">{locationOption.name}</h3>
-                <div className="space-y-2 mb-6">
-                  <div className="flex justify-between text-xs border-b border-zinc-800 pb-1">
-                    <span className="text-zinc-500">ВМЕСТИМОСТЬ</span>
-                    <span className="text-blue-400 font-bold">{locationOption.capacity} ЧЕЛОВЕК</span>
-                  </div>
-                  <div className="flex justify-between text-xs border-b border-zinc-800 pb-1">
-                    <span className="text-zinc-500">РЕСУРСЫ</span>
-                    <span className="text-blue-400 font-bold text-right">{locationOption.supplies.join(', ')}</span>
-                  </div>
-                  <div className="flex justify-between text-xs border-b border-zinc-800 pb-1">
-                    <span className="text-zinc-500">СОСТОЯНИЕ</span>
-                    <span className="text-blue-400 font-bold">{locationOption.condition}</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <VoteSelectionScreen
+        title="Select Deployment"
+        accentText="Site"
+        options={locationOptions}
+        onSelect={handleVoteLocation}
+        mode="location"
+      />
     );
   }
 

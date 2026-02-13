@@ -11,9 +11,6 @@ export class Apocalypse {
   @Column({ type: 'text' })
   description!: string;
 
-  @Column({ name: 'hazard_level', length: 50 })
-  hazardLevel!: string;
-
-  @Column({ length: 50 })
-  duration!: string;
+  @Column({ length: 2048, nullable: true })
+  image!: string;
 }
