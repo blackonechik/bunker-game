@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Card } from './Card';
-import type { Player } from './Player';
+import { Player } from './Player';
 
 @Entity('player_cards')
 export class PlayerCard {
@@ -22,7 +22,7 @@ export class PlayerCard {
   @Column({ name: 'revealed_round', nullable: true })
   revealedRound?: number;
 
-  @ManyToOne('Player', 'cards', { onDelete: 'CASCADE' })
+  @ManyToOne(() => Player, (player) => player.cards, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'player_id' })
   player!: Player;
 

@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, Ma
 import { Apocalypse } from './Apocalypse';
 import { Location } from './Location';
 import { RoomState } from '../types';
-import type { Player } from './Player';
+import { Player } from './Player';
 
 @Entity('rooms')
 export class Room {
@@ -46,7 +46,7 @@ export class Room {
   @Column({ name: 'round_timer', nullable: true })
   roundTimer?: number | null;
 
-  @OneToMany('Player', 'room')
+  @OneToMany(() => Player, (player) => player.room)
   players!: Player[];
 
   @ManyToOne(() => Apocalypse, { eager: true })

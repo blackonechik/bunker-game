@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToMany, OneToOne, JoinColumn } from 'typeorm';
-import type { Room } from './Room';
-import type { PlayerCard } from './PlayerCard';
-import type { Session } from './Session';
+import { Room } from './Room';
+import { PlayerCard } from './PlayerCard';
+import { Session } from './Session';
 
 @Entity('players')
 export class Player {
@@ -32,13 +32,13 @@ export class Player {
   @CreateDateColumn({ name: 'joined_at' })
   joinedAt!: Date;
 
-  @ManyToOne('Room', 'players', { onDelete: 'CASCADE' })
+  @ManyToOne(() => Room, (room) => room.players, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'room_id' })
   room!: Room;
 
-  @OneToMany('PlayerCard', 'player')
+  @OneToMany(() => PlayerCard, (playerCard) => playerCard.player)
   cards!: PlayerCard[];
 
-  @OneToOne('Session', 'player')
+  @OneToOne(() => Session, (session) => session.player)
   session?: Session;
 }

@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, UpdateDateColumn } from 'typeorm';
-import type { Player } from './Player';
+import { Player } from './Player';
 
 @Entity('sessions')
 export class Session {
@@ -18,7 +18,7 @@ export class Session {
   @UpdateDateColumn({ name: 'last_ping' })
   lastPing!: Date;
 
-  @OneToOne('Player', 'session', { onDelete: 'CASCADE' })
+  @OneToOne(() => Player, (player) => player.session, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'player_id' })
   player!: Player;
 }
