@@ -1,10 +1,12 @@
+version: "3.9"
+
 services:
   app:
-    image: ${IMAGE_NAME:-ghcr.io/owner/repo}:${IMAGE_TAG:-latest}
+    image: ${IMAGE_NAME:-ghcr.io/blackonechik/bunker-game}:${IMAGE_TAG:-latest}
     container_name: bunker-game
     restart: unless-stopped
     env_file:
       - .env
-    network_mode: host
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    ports:
+      - "3000:3000"   # пробрасываем порт наружу
+    command: npm run start -- -H 0.0.0.0 -p 3000

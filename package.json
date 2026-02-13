@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "TURBOPACK=0 next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "next start -H 0.0.0.0 -p 3000",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@types/jsonwebtoken": "^9.0.10",
