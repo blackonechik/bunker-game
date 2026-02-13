@@ -201,11 +201,11 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     setRoom((prev) =>
       prev
         ? {
-            ...prev,
-            currentRound: data.round,
-            state: data.state,
-            roundTimer: typeof data.endsAt === 'number' ? data.endsAt : prev.roundTimer,
-          }
+          ...prev,
+          currentRound: data.round,
+          state: data.state,
+          roundTimer: typeof data.endsAt === 'number' ? data.endsAt : prev.roundTimer,
+        }
         : prev
     );
 
@@ -222,11 +222,11 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     setRoom((prev) =>
       prev
         ? {
-            ...prev,
-            currentRound: data.round,
-            state: data.state,
-            roundTimer: data.endsAt ?? prev.roundTimer,
-          }
+          ...prev,
+          currentRound: data.round,
+          state: data.state,
+          roundTimer: data.endsAt ?? prev.roundTimer,
+        }
         : prev
     );
     setTimer(Math.max(0, data.remainingSeconds));
@@ -435,7 +435,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-300 font-mono overflow-x-hidden relative pb-64">
+    <div className="min-h-screen bg-zinc-950 text-zinc-300 font-mono overflow-x-hidden relative">
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_50%,rgba(24,24,27,0)_0%,rgba(9,9,11,1)_100%)] z-10" />
 
       <GameTopBar
@@ -447,7 +447,16 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
       />
 
       <main className="relative z-20 py-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 flex flex-col gap-4">
+          {currentPlayer && (
+            <MyCardsHud
+              playerName={currentPlayer.name}
+              cards={currentPlayer.cards || []}
+              canReveal={room?.state === RoomState.CARD_REVEAL}
+              hasRevealedThisRound={hasRevealedThisRound}
+              onReveal={handleRevealCard}
+            />
+          )}
           <SystemLogPanel messages={messages} onSendMessage={handleSendMessage} />
         </div>
 
@@ -460,16 +469,6 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
           />
         </div>
       </main>
-
-      {currentPlayer && (
-        <MyCardsHud
-          playerName={currentPlayer.name}
-          cards={currentPlayer.cards || []}
-          canReveal={room?.state === RoomState.CARD_REVEAL}
-          hasRevealedThisRound={hasRevealedThisRound}
-          onReveal={handleRevealCard}
-        />
-      )}
 
       <AnimatePresence>
         {!isConnected && (

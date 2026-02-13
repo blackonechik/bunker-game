@@ -64,10 +64,13 @@ export interface ChatMessagePayload {
 // Интерфейсы для данных
 export interface PlayerDTO {
   id: number;
+  userId: string;
   name: string;
+  image?: string | null;
   isAlive: boolean;
   isHost: boolean;
   isOnline: boolean;
+  isBot: boolean;
   cards?: PlayerCardDTO[];
 }
 

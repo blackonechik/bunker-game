@@ -66,6 +66,7 @@ export interface PlayerDTO {
   id: number;
   userId: string;
   name: string;
+  image?: string | null;
   isAlive: boolean;
   isHost: boolean;
   isOnline: boolean;

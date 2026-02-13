@@ -13,9 +13,8 @@ interface MyCardsHudProps {
 
 export function MyCardsHud({ playerName, cards, canReveal, hasRevealedThisRound, onReveal }: MyCardsHudProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none">
-      <div className="max-w-7xl mx-auto bg-zinc-950 border-t-2 border-zinc-800 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] pointer-events-auto relative">
-        <div className="p-6">
+    <div className="bg-zinc-950 border-2 border-zinc-800 shadow-[0_10px_40px_rgba(0,0,0,0.6)] relative">
+        <div className="p-3">
           <div className="flex justify-between items-end mb-6 gap-4 flex-wrap">
             <div>
               <h2 className="text-zinc-100 font-black uppercase text-2xl italic tracking-tight">Ваши карты: {playerName}</h2>
@@ -30,7 +29,7 @@ export function MyCardsHud({ playerName, cards, canReveal, hasRevealedThisRound,
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[52vh] overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 gap-4 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
             {cards.length === 0 && (
               <div className="col-span-full bg-black border border-zinc-700 p-4 text-[11px] uppercase text-zinc-500">
                 Карточки еще не выданы. Ожидание раздачи...
@@ -75,7 +74,7 @@ export function MyCardsHud({ playerName, cards, canReveal, hasRevealedThisRound,
                       onClick={() => onReveal(card.id)}
                       className="mt-4 w-full px-2 py-2 bg-green-600 border border-green-400 text-black text-[10px] uppercase font-bold hover:bg-green-400 transition-all relative z-10"
                     >
-                      Open Card
+                      Открыть
                     </button>
                   )}
 
@@ -85,7 +84,6 @@ export function MyCardsHud({ playerName, cards, canReveal, hasRevealedThisRound,
             })}
           </div>
         </div>
-      </div>
     </div>
   );
 }

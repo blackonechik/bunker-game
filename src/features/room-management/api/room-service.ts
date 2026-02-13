@@ -145,10 +145,54 @@ export class RoomService {
     const ds = getDataSource();
     const playerRepo = ds.getRepository(Player);
     
-    return await playerRepo.find({
+    const players = await playerRepo.find({
       where: { roomId },
       relations: ['cards', 'cards.card'],
     });
+
+    if (players.length === 0) {
+      return players;
+    }
+
+    const userIds = Array.from(
+      new Set(
+        players
+          .filter((player) => !player.isBot)
+          .map((player) => player.userId)
+          .filter(Boolean)
+      )
+    );
+
+    if (userIds.length === 0) {
+      return players;
+    }
+
+    let profileRows: Array<{ id: string; image: string | null }> = [];
+
+    try {
+      profileRows = await ds.query(
+        'SELECT id, image FROM `user` WHERE id IN (?)',
+        [userIds]
+      );
+    } catch {
+      try {
+        profileRows = await ds.query(
+          'SELECT id, image FROM `users` WHERE id IN (?)',
+          [userIds]
+        );
+      } catch {
+        profileRows = [];
+      }
+    }
+
+    const imageByUserId = new Map(
+      profileRows.map((profile) => [String(profile.id), profile.image])
+    );
+
+    return players.map((player) => ({
+      ...player,
+      image: player.isBot ? null : (imageByUserId.get(player.userId) ?? null),
+    }));
   }
 
   static async getPlayerById(playerId: number) {

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { PlayerDTO } from '@/shared/types';
-import { getCardTypeLabel } from '@/shared/lib';
+import { PlayerCardsList } from './PlayerCardsList';
 
 interface VictoryScreenProps {
   winners: PlayerDTO[];
@@ -32,14 +32,7 @@ export function VictoryScreen({ winners }: VictoryScreenProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {(winner.cards || []).map((playerCard) => (
-                  <article key={playerCard.id} className="bg-black border border-zinc-700 p-2 text-[10px] uppercase">
-                    <div className="text-zinc-500 mb-1">{getCardTypeLabel(playerCard.card.type)}</div>
-                    <div className="text-zinc-100 font-bold truncate">{playerCard.card.value}</div>
-                  </article>
-                ))}
-              </div>
+              <PlayerCardsList cards={winner.cards || []} />
             </section>
           ))}
         </div>

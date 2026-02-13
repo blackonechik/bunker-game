@@ -1,7 +1,7 @@
 'use client';
 
 import { PlayerDTO } from '@/shared/types';
-import { getAccentClasses } from '@/shared/lib';
+import { PlayerCardsList } from './PlayerCardsList';
 
 interface PlayersGridProps {
   players: PlayerDTO[];
@@ -34,7 +34,7 @@ export function PlayersGrid({ players, currentPlayerId, canVote, onVote }: Playe
             {isEliminated && (
               <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                 <span className="text-red-600 font-black text-3xl border-4 border-red-600 p-2 rotate-12 opacity-80 uppercase">
-                  Exiled
+                  ВЫГНАН
                 </span>
               </div>
             )}
@@ -49,36 +49,33 @@ export function PlayersGrid({ players, currentPlayerId, canVote, onVote }: Playe
               <div className={`w-12 h-12 border-2 flex items-center justify-center ${
                 isCurrentPlayer ? 'bg-green-900 border-green-700' : 'bg-zinc-800 border-zinc-700'
               }`}>
-                <span className={isCurrentPlayer ? 'text-green-500 font-bold' : 'text-zinc-500 font-bold'}>
-                  {player.name.slice(0, 2).toUpperCase()}
-                </span>
+                {player.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={player.image}
+                    alt={player.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className={isCurrentPlayer ? 'text-green-500 font-bold' : 'text-zinc-500 font-bold'}>
+                    {player.name.slice(0, 2).toUpperCase()}
+                  </span>
+                )}
               </div>
               <div>
                 <h3 className={isCurrentPlayer ? 'font-bold text-zinc-100' : 'font-bold text-zinc-300'}>
                   {player.name} {isCurrentPlayer ? '(Вы)' : ''}
                 </h3>
                 <p className="text-[10px] text-zinc-500 uppercase">
-                  {isEliminated ? 'Status: Exiled' : player.isOnline ? 'Status: Survivor' : 'Status: Offline'}
+                  {isEliminated ? 'Статус: ВЫГНАН' : player.isOnline ? 'Статус: Выживший' : 'Статус: Оффлайн'}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-1 text-[10px] uppercase font-bold">
-              {cardsToShow.map((displayCard) => (
-                <div
-                  key={displayCard.id}
-                  className={`p-2 border truncate ${getAccentClasses(displayCard.card.type).listItem}`}
-                >
-                  {displayCard.card.type}: {displayCard.card.value}
-                </div>
-              ))}
-
-              {!isEliminated && Array.from({ length: Math.max(0, 6 - revealedCards.length) }).map((_, hiddenIndex) => (
-                <div key={`hidden-${player.id}-${hiddenIndex}`} className="bg-zinc-950 p-2 border border-zinc-800 text-zinc-600">
-                  ???
-                </div>
-              ))}
-            </div>
+            <PlayerCardsList
+              cards={cardsToShow}
+              hiddenSlots={isEliminated ? 0 : Math.max(0, 8 - revealedCards.length)}
+            />
 
             <button
               aria-label="Vote for Expulsion"
