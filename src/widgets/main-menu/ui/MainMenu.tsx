@@ -10,6 +10,8 @@ export function MainMenu() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const isAuthenticated = Boolean(session);
+  const userRole = (session?.user as { role?: string } | undefined)?.role;
+  const isAdmin = userRole === 'admin';
 
   const handleAuth = async () => {
     if (isAuthenticated) return;
@@ -56,6 +58,12 @@ export function MainMenu() {
         <Button onClick={() => router.push('/create')} disabled={!isAuthenticated || isPending}>
           Играть
         </Button>
+
+        {isAdmin && (
+          <Button variant='secondary' size='small' onClick={() => router.push('/admin')}>
+            Админка
+          </Button>
+        )}
 
         {!isAuthenticated && (
           <p className="text-xs uppercase tracking-wide text-zinc-500">Сначала авторизуйтесь через Google</p>
