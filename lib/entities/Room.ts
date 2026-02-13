@@ -44,7 +44,7 @@ export class Room {
   @Column({ name: 'started_at', nullable: true })
   startedAt?: Date;
 
-  @Column({ name: 'round_timer', nullable: true })
+  @Column({ name: 'round_timer', type: 'int', nullable: true })
   roundTimer?: number | null;
 
   @OneToMany(() => Player, (player) => player.room)
