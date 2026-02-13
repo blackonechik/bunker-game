@@ -30,32 +30,41 @@ export function useSocketEmit() {
     return new Promise((resolve, reject) => {
       let completed = false;
 
-      const timeoutId = window.setTimeout(() => {
-        if (completed) return;
-        completed = true;
+      const cleanup = () => {
         instance.off('connect', handleConnect);
         instance.off('connect_error', handleConnectError);
-        reject(new Error('Socket not connected'));
-      }, timeoutMs);
+      };
 
       const handleConnect = () => {
         if (completed) return;
         completed = true;
         window.clearTimeout(timeoutId);
-        instance.off('connect_error', handleConnectError);
+        cleanup();
         resolve();
       };
 
-      const handleConnectError = () => {
+      const handleConnectError = (error?: Error) => {
         if (completed) return;
         completed = true;
         window.clearTimeout(timeoutId);
-        instance.off('connect', handleConnect);
-        reject(new Error('Socket not connected'));
+        cleanup();
+        reject(new Error(error?.message || 'Socket not connected'));
       };
+
+      const timeoutId = window.setTimeout(() => {
+        if (completed) return;
+        completed = true;
+        cleanup();
+        reject(new Error('Socket not connected'));
+      }, timeoutMs);
 
       instance.once('connect', handleConnect);
       instance.once('connect_error', handleConnectError);
+
+      if (instance.connected) {
+        handleConnect();
+        return;
+      }
 
       if (!instance.active) {
         instance.connect();
@@ -69,7 +78,7 @@ export function useSocketEmit() {
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        await waitForConnection(instance, 5000);
+        await waitForConnection(instance, 10000);
 
         const response = await new Promise<any>((resolve, reject) => {
           instance.timeout(ackTimeoutMs).emit(event, data, (err: Error | null, ackResponse: any) => {
