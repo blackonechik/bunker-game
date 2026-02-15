@@ -183,31 +183,6 @@ export class SocketServer {
     }
   }
 
-  private async revealMissingPlayerCards(roomId: number, round: number, roomCode: string) {
-    const players = await RoomService.getPlayers(roomId);
-    const alivePlayers = players.filter((player) => player.isAlive);
-
-    for (const player of alivePlayers) {
-      const alreadyRevealedThisRound = (player.cards || []).some((card) => card.revealedRound === round);
-      if (alreadyRevealedThisRound) {
-        continue;
-      }
-
-      const hiddenCards = (player.cards || []).filter((card) => !card.isRevealed);
-      if (hiddenCards.length === 0) {
-        continue;
-      }
-
-      const cardToReveal = this.getRandomItem(hiddenCards);
-      await GameService.revealCard(cardToReveal.id, round);
-
-      this.io.to(`room:${roomCode}`).emit('card:revealed', {
-        playerId: player.id,
-        cardId: cardToReveal.id,
-      });
-    }
-  }
-
   private async processPlayerVotingOutcome(roomId: number, roomCode: string, round: number) {
     const finalizeKey = `${roomId}:${round}`;
     if (this.finalizingPlayerVoteRounds.has(finalizeKey)) {
@@ -416,17 +391,6 @@ export class SocketServer {
     }, 1200);
 
     this.clearCardRevealTimer(roomId);
-    const revealTimeout = setTimeout(async () => {
-      const room = await RoomService.getRoom(roomId);
-      if (!room || room.state !== RoomState.CARD_REVEAL || room.currentRound !== round) {
-        return;
-      }
-
-      await this.revealMissingPlayerCards(roomId, round, roomCode);
-      await this.emitRoomUpdate(roomId, roomCode);
-      await this.tryStartVotingPhase(roomId, roomCode, round);
-    }, 30000);
-    this.roomCardRevealTimers.set(roomId, revealTimeout);
 
     await this.tryStartVotingPhase(roomId, roomCode, round);
   }
