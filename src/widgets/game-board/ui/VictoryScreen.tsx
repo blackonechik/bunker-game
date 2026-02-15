@@ -8,7 +8,7 @@ export function VictoryScreen({ winners }: VictoryScreenProps) {
   const displayedWinners = winners.slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-300 font-mono">
+    <div className="bg-zinc-950 text-zinc-300 font-mono">
       <header className="px-6 pt-12 pb-6 border-b border-zinc-800">
         <h1 className="text-5xl max-md:text-4xl font-black text-emerald-500 uppercase italic tracking-tight">Победа</h1>
         <p className="text-zinc-500 text-sm mt-2 uppercase">В бункере осталось 2 выживших</p>

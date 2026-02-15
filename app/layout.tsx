@@ -83,7 +83,7 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950 min-h-screen selection:bg-amber-500 selection:text-black`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950 selection:bg-amber-500 selection:text-black`}
       >
         <main className='max-w-7xl mx-auto px-4 py-8 text-zinc-200 font-mono'>
           <ToastProvider />
@@ -91,7 +91,6 @@ export default function RootLayout({
             {children}
           </SocketProvider>
         </main>
-        <AppFooter />
       </body>
     </html>
   );

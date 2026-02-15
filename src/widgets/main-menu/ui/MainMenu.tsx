@@ -28,7 +28,7 @@ export const MainMenu: FC<MainMenuProps> = ({ isMusicPlaying, onToggleMusic }) =
 
 
   return (
-    <section className="min-h-screen flex flex-col text-center space-y-12 items-start gap-12">
+    <section className="flex flex-col text-center space-y-12 items-start gap-12">
       <div className='flex justify-between items-center w-full'>
         {isAuthenticated && (
           <div className="m-0 z-20 flex items-center gap-3 bg-zinc-800 border-2 border-zinc-700 px-3 py-2 backdrop-blur-sm">

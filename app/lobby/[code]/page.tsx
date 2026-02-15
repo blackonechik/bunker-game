@@ -245,7 +245,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="bg-zinc-950 flex items-center justify-center">
         <div className="text-emerald-500 text-2xl font-bold uppercase animate-pulse">Загрузка...</div>
       </div>
     );
@@ -253,7 +253,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
 
   if (error && !room) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="bg-zinc-950 flex items-center justify-center">
         <div className="text-red-500 text-2xl font-bold uppercase">{error}</div>
       </div>
     );
@@ -261,7 +261,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 text-zinc-200 font-mono">
+      <div className="bg-zinc-950 text-zinc-200 font-mono">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <LobbyHeader code={code} currentPlayers={players.length} maxPlayers={room?.maxPlayers || 0} />
 

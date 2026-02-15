@@ -472,7 +472,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   };
 
   const renderVoteLoader = (title: string) => (
-    <div className="min-h-screen bg-zinc-950 text-zinc-300 font-mono flex items-center justify-center px-6">
+    <div className="bg-zinc-950 text-zinc-300 font-mono flex items-center justify-center px-6">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -498,7 +498,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   const finalWinners = winners.length > 0 ? winners : players.filter((player) => player.isAlive);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-300 font-mono overflow-x-hidden relative">
+    <div className="bg-zinc-950 text-zinc-300 font-mono overflow-x-hidden relative">
       <AnimatePresence mode="wait" initial={false}>
         {activeScreen === 'vote-apocalypse' && (
           <motion.div

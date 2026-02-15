@@ -93,7 +93,7 @@ export default function CreatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-200 font-mono">
+    <div className="bg-zinc-950 text-zinc-200 font-mono">
       <div className="flex flex-col gap-4 items-center">
         {/* Кнопка назад */}
         <motion.div

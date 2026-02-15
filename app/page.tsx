@@ -62,7 +62,7 @@ export default function Home() {
 
 
   return (
-    <div className="overflow-x-hidden relative">
+    <div className="relative min-">
       <BackgroundVideo />
 
       <audio ref={audioRef} src="/audio/music.mp3" loop />
