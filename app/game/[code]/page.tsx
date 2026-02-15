@@ -15,7 +15,21 @@ interface RoundStartPayload {
   endsAt?: number;
 }
 
-type ActiveScreen = 'vote-apocalypse' | 'vote-location' | 'intro' | 'board' | 'victory';
+interface EliminatedVoteResultPayload {
+  targetId: string | number;
+  count: string | number;
+}
+
+interface EliminationAnnouncement {
+  playerName: string;
+  votes: Array<{
+    targetId: number;
+    targetName: string;
+    count: number;
+  }>;
+}
+
+type ActiveScreen = 'vote-apocalypse' | 'vote-location' | 'intro' | 'elimination' | 'board' | 'victory';
 
 export default function GamePage({ params }: { params: Promise<{ code: string }> }) {
   const { isConnected } = useSocket();
@@ -35,12 +49,14 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   const [winners, setWinners] = useState<PlayerDTO[]>([]);
   const [nowTimestamp, setNowTimestamp] = useState<number>(() => Date.now());
   const [showIntroNarrative, setShowIntroNarrative] = useState(false);
+  const [eliminationAnnouncement, setEliminationAnnouncement] = useState<EliminationAnnouncement | null>(null);
 
   const resumeAttemptedRef = useRef(false);
   const systemMessageKeysRef = useRef<Set<string>>(new Set());
   const introShownRef = useRef(false);
   const introTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const introRafRef = useRef<number | null>(null);
+  const eliminationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionUserId = session?.user?.id ?? null;
   const currentPlayer =
     players.find((player) => player.id === selfPlayerId) ??
@@ -108,6 +124,10 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
 
       if (introTimeoutRef.current) {
         clearTimeout(introTimeoutRef.current);
+      }
+
+      if (eliminationTimeoutRef.current) {
+        clearTimeout(eliminationTimeoutRef.current);
       }
     };
   }, []);
@@ -331,9 +351,35 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     addSystemMessage(`${playerName || 'Игрок'} раскрыл карту`);
   });
 
-  useSocketEvent<{ playerId: number }>('player:eliminated', (data) => {
+  useSocketEvent<{ playerId: number; votes?: EliminatedVoteResultPayload[] }>('player:eliminated', (data) => {
     const player = players.find((playerItem) => playerItem.id === data.playerId);
     addSystemMessage(`${player?.name || 'Игрок'} был исключен из бункера`);
+
+    const votes = (data.votes || []).map((vote) => {
+      const targetId = Number(vote.targetId);
+      const count = Number(vote.count);
+      const target = players.find((playerItem) => playerItem.id === targetId);
+
+      return {
+        targetId,
+        targetName: target?.name || `Игрок #${targetId}`,
+        count: Number.isFinite(count) ? count : 0,
+      };
+    });
+
+    setEliminationAnnouncement({
+      playerName: player?.name || 'Игрок',
+      votes,
+    });
+
+    if (eliminationTimeoutRef.current) {
+      clearTimeout(eliminationTimeoutRef.current);
+    }
+
+    eliminationTimeoutRef.current = setTimeout(() => {
+      setEliminationAnnouncement(null);
+      eliminationTimeoutRef.current = null;
+    }, 5000);
 
     setPlayers((prev) =>
       prev.map((playerItem) =>
@@ -441,6 +487,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   );
 
   const activeScreen: ActiveScreen = (() => {
+    if (eliminationAnnouncement) return 'elimination';
     if (room?.state === RoomState.FINISHED) return 'victory';
     if (room?.state === RoomState.APOCALYPSE_VOTE) return 'vote-apocalypse';
     if (room?.state === RoomState.LOCATION_VOTE) return 'vote-location';
@@ -502,7 +549,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.7 }}
-            className="min-h-screen flex items-center justify-center px-6 bg-black"
+            className="flex items-center justify-center px-6 h-full relative z-10 py-10"
           >
             <motion.div
               initial={{ opacity: 0, y: 24 }}
@@ -517,6 +564,46 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
                 {' '}<span className="text-blue-400 font-black">{location?.name}</span>.
               </p>
               <p className="text-xl max-md:text-base uppercase tracking-wider text-zinc-400">Но в финале останутся только двое игроков...</p>
+            </motion.div>
+          </motion.section>
+        )}
+
+        {activeScreen === 'elimination' && eliminationAnnouncement && (
+          <motion.section
+            key="elimination-announcement"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex items-center justify-center px-6 relative h-full flex-col gap-2"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.1 }}
+              className="max-w-4xl text-center"
+            >
+              <p className="text-xs tracking-[0.28em] uppercase text-zinc-600 mb-4">Протокол голосования завершен</p>
+              <p className="text-4xl max-md:text-2xl font-black uppercase text-red-500">{eliminationAnnouncement.playerName} был исключен</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.35 }}
+              className="-translate-x-1/2 w-full max-w-3xl px-6"
+            >
+              <div className="border border-zinc-800 bg-zinc-950/90 px-5 py-4">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-zinc-500 mb-3">Итоги голосования</p>
+                <div className="grid gap-2">
+                  {eliminationAnnouncement.votes.map((vote) => (
+                    <div key={vote.targetId} className="flex items-center justify-between text-sm text-zinc-300">
+                      <span>{vote.targetName}</span>
+                      <span className="text-zinc-100 font-bold">{vote.count} голос(ов)</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           </motion.section>
         )}

@@ -69,7 +69,7 @@ export function GameTopBar({ round, state, timer, apocalypseName, locationName, 
         </div>
       </div>
 
-      <div className="flex gap-6 items-center bg-black border border-zinc-700 px-6 py-3 rounded-md justify-between">
+      <div className="flex gap-6 items-center bg-black border border-zinc-700 px-6 py-3 rounded-md justify-between flex-wrap">
         <div className="text-center">
           <p className="text-[10px] uppercase text-zinc-500">Длительность игры</p>
           <p className="text-sm font-bold text-orange-400">{formatDuration(gameDurationSeconds)}</p>

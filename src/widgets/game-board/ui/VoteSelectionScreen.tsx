@@ -26,8 +26,8 @@ export function VoteSelectionScreen({
 	};
 
 	return (
-		<div className="relative z-10 container mx-auto px-6 py-12">
-			<div className="mb-12 text-center">
+		<div className="relative z-10 container mx-auto">
+			<div className="mb-12 text-center max-md:mb-4">
 				<Title className="mb-4">
 					Выберите {title}
 				</Title>
