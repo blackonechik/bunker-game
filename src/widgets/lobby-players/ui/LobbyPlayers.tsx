@@ -20,7 +20,7 @@ export function LobbyPlayers({ players, maxPlayers, currentPlayerId, isHost, onK
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}
 			transition={{ delay: 0.2 }}
-			className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8"
+			className="grid grid-cols-6 max-lg:grid-cols-4 max-md:grid-cols-2 gap-4 mb-8"
 		>
 			{players.map((player, index) => {
 				const isYou = player.id.toString() === currentPlayerId;

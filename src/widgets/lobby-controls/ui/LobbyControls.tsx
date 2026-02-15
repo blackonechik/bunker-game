@@ -34,12 +34,12 @@ export function LobbyControls({
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.4 }}
-					className="flex flex-col md:flex-row gap-3 justify-center"
+					className="flex flex-row max-md:flex-col gap-3 justify-center"
 				>
-					<Button onClick={onFillBots} disabled={!canFillBots} variant="secondary" size="large">
+					<Button onClick={onFillBots} disabled={!canFillBots} variant="secondary" size="small">
 						Заполнить ботами
 					</Button>
-					<Button onClick={onStartGame} disabled={!canStart} variant="primary" size="large">
+					<Button onClick={onStartGame} disabled={!canStart} variant="primary" size="small">
 						{playersCount < minPlayers ? `Нужно минимум ${minPlayers} игрока` : 'Начать игру'}
 					</Button>
 				</motion.div>

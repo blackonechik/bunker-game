@@ -33,7 +33,7 @@ export function VoteSelectionScreen({
 				</Title>
 			</div>
 
-			<section className="md:hidden space-y-6">
+			<section className="hidden max-md:block space-y-6">
 				<div className="overflow-hidden">
 					<motion.div
 						className="flex"
@@ -70,7 +70,7 @@ export function VoteSelectionScreen({
 				)}
 			</section>
 
-			<section className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+			<section className="grid grid-cols-3 max-lg:grid-cols-2 max-md:hidden gap-8">
 				{options.map((option) => (
 					<VoteOptionCard
 						key={option.id}

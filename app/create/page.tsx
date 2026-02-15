@@ -116,7 +116,7 @@ export default function CreatePage() {
         
         <Logo className='m-4'/>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 max-md:grid-cols-1 gap-8 max-w-4xl mx-auto">
           {/* Создать комнату */}
           <RoomCard mode="create" isActive={mode === 'create'} onFocus={() => setMode('create')} delay={0.2}>
             <RangeSlider

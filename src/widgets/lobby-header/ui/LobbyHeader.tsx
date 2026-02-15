@@ -24,9 +24,9 @@ export function LobbyHeader({ code, currentPlayers, maxPlayers }: LobbyHeaderPro
 		<motion.div
 			initial={{ opacity: 0, y: -20 }}
 			animate={{ opacity: 1, y: 0 }}
-			className="flex items-end justify-between border-b-2 border-zinc-800 pb-4 mb-8"
+			className="flex items-end justify-between border-b-2 border-zinc-800 pb-4 mb-8 max-md:flex-col max-md:items-center gap-4"
 		>
-			<div>
+			<div className='flex flex-col gap-2 max-md:items-center'>
 				<h2 className="text-4xl font-black uppercase italic">Зона ожидания</h2>
 				<p className="text-zinc-500 uppercase text-xs mt-2">
 					Выживших в бункере ({currentPlayers}/{maxPlayers})

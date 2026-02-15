@@ -324,13 +324,13 @@ export default function AdminPanelClient() {
 
   return (
     <section className="space-y-8">
-      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <header className="flex flex-row items-center justify-between gap-4 max-md:flex-col max-md:items-start max-md:justify-start">
         <div>
           <h1 className="text-2xl font-black uppercase tracking-widest text-emerald-400">Админ панель</h1>
           <p className="text-sm text-zinc-400">Управление апокалипсисами, картами и локациями</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-row max-sm:flex-col gap-3">
           <Button size="small" variant="secondary" onClick={handleExport}>Экспорт JSON</Button>
           <label className="px-4 py-2 text-sm bg-zinc-800 border-2 border-zinc-600 text-zinc-200 font-bold uppercase tracking-wide cursor-pointer hover:border-emerald-500 transition-colors text-center">
             Импорт JSON
@@ -342,7 +342,7 @@ export default function AdminPanelClient() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 max-md:grid-cols-1 gap-3">
         <Button size="small" variant={activeEntity === 'apocalypses' ? 'primary' : 'secondary'} onClick={() => setActiveEntity('apocalypses')}>
           Апокалипсисы
         </Button>
@@ -386,7 +386,7 @@ export default function AdminPanelClient() {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-row max-sm:flex-col gap-3">
           <Button size="small" onClick={submitForm} disabled={saving}>{saving ? 'Сохранение...' : editingId ? 'Сохранить изменения' : 'Добавить запись'}</Button>
           <Button size="small" variant="secondary" onClick={resetForms}>Сбросить</Button>
         </div>

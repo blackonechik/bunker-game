@@ -40,7 +40,7 @@ export function PlayerCard({ card, onReveal, canReveal = false }: PlayerCardProp
     return (
       <motion.div
         whileHover={canReveal ? { scale: 1.05 } : {}}
-        className={`min-w-[200px] md:min-w-0 snap-center p-4 bg-zinc-900 border-t-4 ${getBorderColor()} shadow-xl relative overflow-hidden group cursor-pointer`}
+        className={`min-w-0 max-md:min-w-[200px] snap-center p-4 bg-zinc-900 border-t-4 ${getBorderColor()} shadow-xl relative overflow-hidden group cursor-pointer`}
       >
         <div className="text-[10px] text-zinc-500 font-bold uppercase mb-2">
           {typeLabel}
@@ -75,7 +75,7 @@ export function PlayerCard({ card, onReveal, canReveal = false }: PlayerCardProp
       initial={{ rotateY: 180, opacity: 0 }}
       animate={{ rotateY: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className={`min-w-[200px] md:min-w-0 snap-center p-4 ${isSpecial ? 'bg-emerald-950' : 'bg-zinc-900'} border-t-4 ${getBorderColor()} shadow-xl group hover:-translate-y-2 transition-transform duration-300 ${isSpecial ? 'shadow-[0_0_20px_rgba(16,185,129,0.2)]' : ''}`}
+      className={`min-w-0 max-md:min-w-[200px] snap-center p-4 ${isSpecial ? 'bg-emerald-950' : 'bg-zinc-900'} border-t-4 ${getBorderColor()} shadow-xl group hover:-translate-y-2 transition-transform duration-300 ${isSpecial ? 'shadow-[0_0_20px_rgba(16,185,129,0.2)]' : ''}`}
     >
       <div className="text-[10px] text-zinc-500 font-bold uppercase mb-2">
         {typeLabel}

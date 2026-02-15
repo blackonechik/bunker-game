@@ -19,9 +19,9 @@ export function MainMenu() {
   };
 
   return (
-    <section className="min-h-screen flex flex-col items-center justify-center text-center space-y-12">
+    <section className="min-h-screen flex flex-col text-center space-y-12 items-start gap-12">
       {isAuthenticated && (
-        <div className="fixed top-4 left-4 z-20 flex items-center gap-3 bg-zinc-900/90 border border-zinc-700 px-3 py-2 backdrop-blur-sm">
+        <div className="m-0 z-20 flex items-center gap-3 bg-zinc-900/90 border border-zinc-700 px-3 py-2 backdrop-blur-sm">
           {session?.user?.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -41,38 +41,40 @@ export function MainMenu() {
         </div>
       )}
 
-      <Logo size='large' />
+      <div className="z-10 flex flex-col items-center gap-12 w-full">
+        <Logo size='large' />
 
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-4 w-full max-w-xs"
-      >
-        {!isAuthenticated && (
-          <Button onClick={handleAuth} disabled={isPending}>
-            {isPending ? 'Проверка...' : 'Авторизоваться'}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col gap-4 w-full max-w-xs"
+        >
+          {!isAuthenticated && (
+            <Button onClick={handleAuth} disabled={isPending}>
+              {isPending ? 'Проверка...' : 'Авторизоваться'}
+            </Button>
+          )}
+
+
+          <Button onClick={() => router.push('/create')} disabled={!isAuthenticated || isPending}>
+            Играть
           </Button>
-        )}
 
+          {isAdmin && (
+            <Button variant='secondary' size='small' onClick={() => router.push('/admin')}>
+              Админка
+            </Button>
+          )}
 
-        <Button onClick={() => router.push('/create')} disabled={!isAuthenticated || isPending}>
-          Играть
-        </Button>
+          {!isAuthenticated && (
+            <p className="text-xs uppercase tracking-wide text-zinc-500">Сначала авторизуйтесь через Google</p>
+          )}
 
-        {isAdmin && (
-          <Button variant='secondary' size='small' onClick={() => router.push('/admin')}>
-            Админка
+          <Button variant='secondary' size='small' onClick={() => router.push('/authors')}>
+            Об авторах
           </Button>
-        )}
-
-        {!isAuthenticated && (
-          <p className="text-xs uppercase tracking-wide text-zinc-500">Сначала авторизуйтесь через Google</p>
-        )}
-
-        <Button variant='secondary' size='small' onClick={() => router.push('/authors')}>
-          Об авторах
-        </Button>
-      </motion.div>
+        </motion.div>
+      </div>
     </section>
   );
 }

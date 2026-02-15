@@ -10,12 +10,12 @@ export function VictoryScreen({ winners }: VictoryScreenProps) {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-300 font-mono">
       <header className="px-6 pt-12 pb-6 border-b border-zinc-800">
-        <h1 className="text-4xl md:text-5xl font-black text-emerald-500 uppercase italic tracking-tight">Победа</h1>
+        <h1 className="text-5xl max-md:text-4xl font-black text-emerald-500 uppercase italic tracking-tight">Победа</h1>
         <p className="text-zinc-500 text-sm mt-2 uppercase">В бункере осталось 2 выживших</p>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 max-md:grid-cols-1 gap-6">
           {displayedWinners.map((winner, index) => (
             <section key={winner.id} className="bg-zinc-900 border-2 border-zinc-800 p-4">
               <div className="flex items-center gap-3 mb-4">

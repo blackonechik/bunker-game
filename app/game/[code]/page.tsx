@@ -511,12 +511,12 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
               className="max-w-3xl text-center space-y-6"
             >
               <p className="text-xs tracking-[0.28em] uppercase text-zinc-600">Протокол начала катастрофы</p>
-              <p className="text-2xl md:text-4xl font-black uppercase text-red-500">На мир спустилось: {apocalypse?.name}</p>
-              <p className="text-lg md:text-2xl text-zinc-200 leading-relaxed">
+              <p className="text-4xl max-md:text-2xl font-black uppercase text-red-500">На мир спустилось: {apocalypse?.name}</p>
+              <p className="text-2xl max-md:text-lg text-zinc-200 leading-relaxed">
                 <span className="text-amber-400 font-black">{Math.max(players.length, 0)}</span> — число игроков, которые оказались запертыми в
                 {' '}<span className="text-blue-400 font-black">{location?.name}</span>.
               </p>
-              <p className="text-base md:text-xl uppercase tracking-wider text-zinc-400">Но в финале останутся только двое игроков...</p>
+              <p className="text-xl max-md:text-base uppercase tracking-wider text-zinc-400">Но в финале останутся только двое игроков...</p>
             </motion.div>
           </motion.section>
         )}
@@ -542,8 +542,8 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
               totalPlayersCount={players.length}
             />
 
-            <main className="relative z-20 py-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
-              <div className="lg:col-span-3 flex flex-col gap-4">
+            <main className="relative z-20 py-6 grid grid-cols-12 max-lg:grid-cols-1 gap-4">
+              <div className="col-span-3 max-lg:col-span-1 flex flex-col gap-4">
                 {currentPlayer && (
                   <MyCardsHud
                     playerName={currentPlayer.name}
@@ -556,7 +556,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
                 <SystemLogPanel messages={messages} onSendMessage={handleSendMessage} />
               </div>
 
-              <div className="lg:col-span-9">
+              <div className="col-span-9 max-lg:col-span-1">
                 <PlayersGrid
                   players={players}
                   currentPlayerId={currentPlayerId}

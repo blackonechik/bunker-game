@@ -6,7 +6,7 @@ import { PlayersGridProps } from '../types';
 
 export function PlayersGrid({ players, currentPlayerId, canVote, onVote }: PlayersGridProps) {
   return (
-    <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+    <section className="grid grid-cols-3 max-xl:grid-cols-2 max-md:grid-cols-1 gap-3">
       {players.map((player, index) => {
         const isCurrentPlayer = player.id === currentPlayerId;
         const isEliminated = !player.isAlive;
