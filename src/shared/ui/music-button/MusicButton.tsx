@@ -9,7 +9,7 @@ export function MusicButton({ isPlaying, onToggle }: MusicButtonProps) {
   return (
     <button
       onClick={onToggle}
-      className="fixed top-8 right-8 z-30 p-3 bg-zinc-900/80 border border-zinc-700 hover:border-amber-500 transition-colors rounded backdrop-blur-sm"
+      className="p-3 bg-zinc-900/80 border border-zinc-700 hover:border-amber-500 transition-colors rounded backdrop-blur-sm"
       title={isPlaying ? 'Выключить музыку' : 'Включить музыку'}
     >
       {isPlaying ? (

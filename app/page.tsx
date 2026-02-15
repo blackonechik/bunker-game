@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useSession } from '@/shared/lib/auth-client';
 import { LoadingDoors } from '@/shared/ui/loading-doors';
 import { BackgroundVideo } from '@/shared/ui/background-video';
-import { MusicButton } from '@/shared/ui/music-button';
 import { StartScreen } from '@/widgets/start-screen';
 import { MainMenu } from '@/widgets/main-menu';
 
@@ -15,11 +14,13 @@ export default function Home() {
   const [showMenu, setShowMenu] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+
   const doorAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (isPending) return;
-    
+
     const timer = setTimeout(() => {
       const hasAuth = Boolean(session);
       if (hasAuth) {
@@ -28,14 +29,14 @@ export default function Home() {
         setShowStart(true);
       }
     }, 0);
-    
+
     return () => clearTimeout(timer);
   }, [isPending, session]);
 
   const handleStart = () => {
     setShowStart(false);
     setShowDoors(true);
-    doorAudioRef.current?.play().catch(() => {});
+    doorAudioRef.current?.play().catch(() => { });
   };
 
   const handleDoorsComplete = () => {
@@ -48,7 +49,7 @@ export default function Home() {
 
   const toggleMusic = () => {
     if (!audioRef.current) return;
-    
+
     if (isMusicPlaying) {
       audioRef.current.pause();
       setIsMusicPlaying(false);
@@ -58,6 +59,7 @@ export default function Home() {
         .catch(() => setIsMusicPlaying(false));
     }
   };
+
 
   return (
     <div className="overflow-x-hidden relative">
@@ -69,10 +71,7 @@ export default function Home() {
       {showStart && <StartScreen onStart={handleStart} />}
       {showDoors && <LoadingDoors onComplete={handleDoorsComplete} />}
       {showMenu && (
-        <>
-          <MusicButton isPlaying={isMusicPlaying} onToggle={toggleMusic} />
-          <MainMenu />
-        </>
+        <MainMenu isMusicPlaying={isMusicPlaying} onToggleMusic={toggleMusic} />
       )}
     </div>
   );

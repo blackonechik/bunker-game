@@ -20,9 +20,9 @@ export function Logo({ size = 'medium', className = '' }: LogoProps) {
 			protocolBadge: 'text-sm px-2 py-1 -right-4 -top-4'
 		},
 		large: {
-			title: 'text-[12rem] max-md:text-7xl',
+			title: 'text-[12rem] max-md:text-7xl leading-none',
 			ageBadge: 'text-sm px-2 py-1 -left-6 bottom-0 max-md:px-1 max-md:py-px',
-			protocolBadge: 'text-base px-3 py-1.5 -right-8 -top-6 max-md:px-2 max-md:py-1'
+			protocolBadge: 'text-base px-3 py-1.5 -right-8 -top-0 max-md:px-2 max-md:py-1 max-md:-top-4 max-md:scale-70'
 		}
 	};
 
