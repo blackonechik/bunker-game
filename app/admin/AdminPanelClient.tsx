@@ -44,6 +44,7 @@ export default function AdminPanelClient() {
   const [activeEntity, setActiveEntity] = useState<EntityKey>('apocalypses');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [purging, setPurging] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [data, setData] = useState<EntityState>(initialData);
 
@@ -268,6 +269,59 @@ export default function AdminPanelClient() {
     }
   };
 
+  const handlePurgeGames = async () => {
+    const approved = window.confirm(
+      'Это удалит все игровые данные (голоса, карты игроков, игроков и комнаты). Продолжить?'
+    );
+
+    if (!approved) {
+      return;
+    }
+
+    const confirmation = window.prompt('Введите DELETE_GAME_DATA для подтверждения:');
+    if (!confirmation) {
+      return;
+    }
+
+    setPurging(true);
+
+    try {
+      const response = await fetch('/api/admin/purge-games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmation: confirmation.trim() }),
+      });
+
+      const body = (await response.json()) as {
+        error?: string;
+        data?: {
+          stats?: Record<string, { before?: number; deleted?: number }>;
+        };
+      };
+
+      if (!response.ok) {
+        throw new Error(body.error || 'Ошибка очистки игровых таблиц');
+      }
+
+      const stats = body.data?.stats;
+      if (stats) {
+        const totalDeleted = Object.values(stats).reduce((acc, value) => {
+          const deleted = typeof value.deleted === 'number' ? value.deleted : 0;
+          return acc + deleted;
+        }, 0);
+
+        showNotification.success('Готово', `Игровые таблицы очищены. Удалено записей: ${totalDeleted}`);
+      } else {
+        showNotification.success('Готово', 'Игровые таблицы очищены');
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Ошибка очистки игровых таблиц';
+      showNotification.error('Ошибка', message);
+    } finally {
+      setPurging(false);
+    }
+  };
+
   return (
     <section className="space-y-8">
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -282,6 +336,9 @@ export default function AdminPanelClient() {
             Импорт JSON
             <input type="file" accept="application/json" className="hidden" onChange={handleImport} />
           </label>
+          <Button size="small" variant="secondary" onClick={handlePurgeGames} disabled={purging}>
+            {purging ? 'Очистка...' : 'Очистить игровые таблицы'}
+          </Button>
         </div>
       </header>
 

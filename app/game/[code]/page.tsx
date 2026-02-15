@@ -15,6 +15,8 @@ interface RoundStartPayload {
   endsAt?: number;
 }
 
+type ActiveScreen = 'vote-apocalypse' | 'vote-location' | 'intro' | 'board' | 'victory';
+
 export default function GamePage({ params }: { params: Promise<{ code: string }> }) {
   const { isConnected } = useSocket();
   const { emit } = useSocketEmit();
@@ -32,9 +34,12 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   const [locationOptions, setLocationOptions] = useState<LocationDTO[]>([]);
   const [winners, setWinners] = useState<PlayerDTO[]>([]);
   const [nowTimestamp, setNowTimestamp] = useState<number>(() => Date.now());
+  const [showIntroNarrative, setShowIntroNarrative] = useState(false);
 
   const resumeAttemptedRef = useRef(false);
   const systemMessageKeysRef = useRef<Set<string>>(new Set());
+  const introShownRef = useRef(false);
+  const introTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionUserId = session?.user?.id ?? null;
   const currentPlayer =
     players.find((player) => player.id === selfPlayerId) ??
@@ -91,6 +96,14 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
 
     return () => {
       clearInterval(intervalId);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (introTimeoutRef.current) {
+        clearTimeout(introTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -210,6 +223,38 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
 
     setLocationOptions([]);
   });
+
+  useEffect(() => {
+    if (introShownRef.current) {
+      return;
+    }
+
+    if (!room?.state || !apocalypse || !location) {
+      return;
+    }
+
+    const shouldShowIntro =
+      room.state !== RoomState.WAITING &&
+      room.state !== RoomState.APOCALYPSE_VOTE &&
+      room.state !== RoomState.LOCATION_VOTE &&
+      room.state !== RoomState.FINISHED;
+
+    if (!shouldShowIntro) {
+      return;
+    }
+
+    introShownRef.current = true;
+    setShowIntroNarrative(true);
+
+    if (introTimeoutRef.current) {
+      clearTimeout(introTimeoutRef.current);
+    }
+
+    introTimeoutRef.current = setTimeout(() => {
+      setShowIntroNarrative(false);
+      introTimeoutRef.current = null;
+    }, 6500);
+  }, [room?.state, apocalypse, location]);
 
   useSocketEvent<RoundStartPayload>('game:round_start', (data) => {
     setRoom((prev) =>
@@ -372,71 +417,161 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     await emitWithResumeRetry('vote:player', { targetPlayerId });
   };
 
-  if (room?.state === RoomState.APOCALYPSE_VOTE && apocalypseOptions.length > 0) {
-    return (
-      <VoteSelectionScreen
-        title="Аппокалипсис"
-        options={apocalypseOptions}
-        onSelect={handleVoteApocalypse}
-        mode="apocalypse"
-      />
-    );
-  }
+  const renderVoteLoader = (title: string) => (
+    <div className="min-h-screen bg-zinc-950 text-zinc-300 font-mono flex items-center justify-center px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="text-center border border-zinc-800 bg-black/50 px-8 py-10"
+      >
+        <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500 mb-3">ПОДГОТОВКА ЭТАПА</p>
+        <h2 className="text-xl font-black uppercase text-zinc-200">Голосование за {title}</h2>
+        <p className="text-sm text-zinc-500 mt-2">Получаем варианты, подождите...</p>
+      </motion.div>
+    </div>
+  );
 
-  if (room?.state === RoomState.LOCATION_VOTE && locationOptions.length > 0) {
-    return (
-      <VoteSelectionScreen
-        title="Локацию"
-        options={locationOptions}
-        onSelect={handleVoteLocation}
-        mode="location"
-      />
-    );
-  }
+  const activeScreen: ActiveScreen = (() => {
+    if (room?.state === RoomState.FINISHED) return 'victory';
+    if (room?.state === RoomState.APOCALYPSE_VOTE) return 'vote-apocalypse';
+    if (room?.state === RoomState.LOCATION_VOTE) return 'vote-location';
+    if (showIntroNarrative) return 'intro';
+    return 'board';
+  })();
 
-  if (room?.state === RoomState.FINISHED) {
-    const finalWinners = winners.length > 0 ? winners : players.filter((player) => player.isAlive);
-    return <VictoryScreen winners={finalWinners} />;
-  }
+  const finalWinners = winners.length > 0 ? winners : players.filter((player) => player.isAlive);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-300 font-mono overflow-x-hidden relative">
-      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_50%,rgba(24,24,27,0)_0%,rgba(9,9,11,1)_100%)] z-10" />
+      <AnimatePresence mode="wait" initial={false}>
+        {activeScreen === 'vote-apocalypse' && (
+          <motion.div
+            key="vote-apocalypse"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45 }}
+          >
+            {apocalypseOptions.length > 0 ? (
+              <VoteSelectionScreen
+                title="Апокалипсис"
+                options={apocalypseOptions}
+                onSelect={handleVoteApocalypse}
+                mode="apocalypse"
+              />
+            ) : (
+              renderVoteLoader('апокалипсис')
+            )}
+          </motion.div>
+        )}
 
-      <GameTopBar
-        round={room?.currentRound || 1}
-        state={room?.state}
-        timer={timer}
-        apocalypseName={apocalypse?.name}
-        locationName={location?.name}
-        gameDurationSeconds={gameDurationSeconds}
-        alivePlayersCount={alivePlayersCount}
-        totalPlayersCount={players.length}
-      />
+        {activeScreen === 'vote-location' && (
+          <motion.div
+            key="vote-location"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45 }}
+          >
+            {locationOptions.length > 0 ? (
+              <VoteSelectionScreen
+                title="Локацию"
+                options={locationOptions}
+                onSelect={handleVoteLocation}
+                mode="location"
+              />
+            ) : (
+              renderVoteLoader('локацию')
+            )}
+          </motion.div>
+        )}
 
-      <main className="relative z-20 py-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div className="lg:col-span-3 flex flex-col gap-4">
-          {currentPlayer && (
-            <MyCardsHud
-              playerName={currentPlayer.name}
-              cards={currentPlayer.cards || []}
-              canReveal={room?.state === RoomState.CARD_REVEAL}
-              hasRevealedThisRound={hasRevealedThisRound}
-              onReveal={handleRevealCard}
+        {activeScreen === 'intro' && (
+          <motion.section
+            key="intro-narrative"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.7 }}
+            className="min-h-screen flex items-center justify-center px-6 bg-black"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="max-w-3xl text-center space-y-6"
+            >
+              <p className="text-xs tracking-[0.28em] uppercase text-zinc-600">Протокол начала катастрофы</p>
+              <p className="text-2xl md:text-4xl font-black uppercase text-red-500">На мир спустилось: {apocalypse?.name}</p>
+              <p className="text-lg md:text-2xl text-zinc-200 leading-relaxed">
+                <span className="text-amber-400 font-black">{Math.max(players.length, 0)}</span> — число игроков, которые оказались запертыми в
+                {' '}<span className="text-blue-400 font-black">{location?.name}</span>.
+              </p>
+              <p className="text-base md:text-xl uppercase tracking-wider text-zinc-400">Но в финале останутся только двое игроков...</p>
+            </motion.div>
+          </motion.section>
+        )}
+
+        {activeScreen === 'board' && (
+          <motion.div
+            key="game-board"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_50%,rgba(24,24,27,0)_0%,rgba(9,9,11,1)_100%)] z-10" />
+
+            <GameTopBar
+              round={room?.currentRound || 1}
+              state={room?.state}
+              timer={timer}
+              apocalypseName={apocalypse?.name}
+              locationName={location?.name}
+              gameDurationSeconds={gameDurationSeconds}
+              alivePlayersCount={alivePlayersCount}
+              totalPlayersCount={players.length}
             />
-          )}
-          <SystemLogPanel messages={messages} onSendMessage={handleSendMessage} />
-        </div>
 
-        <div className="lg:col-span-9">
-          <PlayersGrid
-            players={players}
-            currentPlayerId={currentPlayerId}
-            canVote={room?.state === RoomState.VOTING}
-            onVote={handleVotePlayer}
-          />
-        </div>
-      </main>
+            <main className="relative z-20 py-6 grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <div className="lg:col-span-3 flex flex-col gap-4">
+                {currentPlayer && (
+                  <MyCardsHud
+                    playerName={currentPlayer.name}
+                    cards={currentPlayer.cards || []}
+                    canReveal={room?.state === RoomState.CARD_REVEAL}
+                    hasRevealedThisRound={hasRevealedThisRound}
+                    onReveal={handleRevealCard}
+                  />
+                )}
+                <SystemLogPanel messages={messages} onSendMessage={handleSendMessage} />
+              </div>
+
+              <div className="lg:col-span-9">
+                <PlayersGrid
+                  players={players}
+                  currentPlayerId={currentPlayerId}
+                  canVote={room?.state === RoomState.VOTING}
+                  onVote={handleVotePlayer}
+                />
+              </div>
+            </main>
+          </motion.div>
+        )}
+
+        {activeScreen === 'victory' && (
+          <motion.div
+            key="victory-screen"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45 }}
+          >
+            <VictoryScreen winners={finalWinners} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {!isConnected && (
