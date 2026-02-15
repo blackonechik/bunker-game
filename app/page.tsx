@@ -70,9 +70,7 @@ export default function Home() {
 
       {showStart && <StartScreen onStart={handleStart} />}
       {showDoors && <LoadingDoors onComplete={handleDoorsComplete} />}
-      {showMenu && (
-        <MainMenu isMusicPlaying={isMusicPlaying} onToggleMusic={toggleMusic} />
-      )}
+      <MainMenu isMusicPlaying={isMusicPlaying} onToggleMusic={toggleMusic} />
     </div>
   );
 }

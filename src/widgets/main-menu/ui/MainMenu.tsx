@@ -31,7 +31,7 @@ export const MainMenu: FC<MainMenuProps> = ({ isMusicPlaying, onToggleMusic }) =
     <section className="min-h-screen flex flex-col text-center space-y-12 items-start gap-12">
       <div className='flex justify-between items-center w-full'>
         {isAuthenticated && (
-          <div className="m-0 z-20 flex items-center gap-3 bg-zinc-900/90 border border-zinc-700 px-3 py-2 backdrop-blur-sm">
+          <div className="m-0 z-20 flex items-center gap-3 bg-zinc-800 border-2 border-zinc-700 px-3 py-2 backdrop-blur-sm">
             {session?.user?.image ? (
               <Image
                 src={session.user.image}
@@ -60,27 +60,22 @@ export const MainMenu: FC<MainMenuProps> = ({ isMusicPlaying, onToggleMusic }) =
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col gap-4 w-full max-w-xs"
+          className="flex flex-col gap-4 w-full max-w-xs max-md:gap-2"
         >
-          {!isAuthenticated && (
+          {!isAuthenticated ? (
             <Button onClick={handleAuth} disabled={isPending}>
               {isPending ? 'Проверка...' : 'Авторизоваться'}
             </Button>
+          ) : (
+            <Button onClick={() => router.push('/create')}>
+              Играть
+            </Button>
           )}
-
-
-          <Button onClick={() => router.push('/create')} disabled={!isAuthenticated || isPending}>
-            Играть
-          </Button>
 
           {isAdmin && (
             <Button variant='secondary' size='small' onClick={() => router.push('/admin')}>
               Админка
             </Button>
-          )}
-
-          {!isAuthenticated && (
-            <p className="text-xs uppercase tracking-wide text-zinc-500">Сначала авторизуйтесь через Google</p>
           )}
 
           <Button variant='secondary' size='small' onClick={() => router.push('/authors')}>
