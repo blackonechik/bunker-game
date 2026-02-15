@@ -40,7 +40,7 @@ export function GameTopBar({ round, state, timer, apocalypseName, locationName, 
   const isUrgent = normalizedTimer <= 10;
 
   return (
-    <header className="relative z-20 border-b-2 border-zinc-800 bg-zinc-900 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+    <header className="relative z-20 border-b-2 border-zinc-800 bg-zinc-900 px-6 py-4 flex flex-wrap justify-between items-center gap-4 max-md:gap-2 max-md:px-3 max-md:py-1">
       <div className="flex items-center gap-5">
         <div className="relative w-24 h-24">
           <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100" aria-hidden>
@@ -69,22 +69,19 @@ export function GameTopBar({ round, state, timer, apocalypseName, locationName, 
         </div>
       </div>
 
-      <div className="flex gap-6 items-center bg-black border border-zinc-700 px-6 py-3 rounded-md min-w-[300px]">
+      <div className="flex gap-6 items-center bg-black border border-zinc-700 px-6 py-3 rounded-md justify-between">
         <div className="text-center">
           <p className="text-[10px] uppercase text-zinc-500">Длительность игры</p>
           <p className="text-sm font-bold text-orange-400">{formatDuration(gameDurationSeconds)}</p>
         </div>
-        <div className="h-10 w-[1px] bg-zinc-700" />
         <div className="text-center">
           <p className="text-[10px] uppercase text-zinc-500">Выжившие</p>
           <p className="text-sm font-bold text-emerald-400">{alivePlayersCount} / {Math.max(totalPlayersCount, 1)}</p>
         </div>
-        <div className="h-10 w-[1px] bg-zinc-700" />
         <div className="text-center">
           <p className="text-[10px] uppercase text-zinc-500">Апокалипсис</p>
           <p className="text-sm font-bold text-red-500">{apocalypseName || 'Не выбран'}</p>
         </div>
-        <div className="h-10 w-[1px] bg-zinc-700" />
         <div className="text-center">
           <p className="text-[10px] uppercase text-zinc-500">Локация</p>
           <p className="text-sm font-bold text-blue-400">{locationName || 'Не выбрана'}</p>
