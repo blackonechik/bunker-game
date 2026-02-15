@@ -4,11 +4,32 @@ import { Player } from '@/lib/entities/Player';
 import { generateRoomCode } from '@/shared/lib/game';
 import { RoomState } from '@/shared/types';
 
+const MAX_ACTIVE_ROOMS_PER_HOST = 3;
+
+export class TooManyActiveRoomsError extends Error {
+  constructor(message = 'У вас слишком много активных комнат. Завершите текущие и попробуйте снова.') {
+    super(message);
+    this.name = 'TooManyActiveRoomsError';
+  }
+}
+
 export class RoomService {
   static async createRoom(maxPlayers: number, hardcore: boolean, playerName: string, userId: string) {
     const ds = getDataSource();
     const roomRepo = ds.getRepository(Room);
     const playerRepo = ds.getRepository(Player);
+
+    const activeRoomsCount = await playerRepo
+      .createQueryBuilder('player')
+      .innerJoin('player.room', 'room')
+      .where('player.userId = :userId', { userId })
+      .andWhere('player.isHost = :isHost', { isHost: true })
+      .andWhere('room.state != :finishedState', { finishedState: RoomState.FINISHED })
+      .getCount();
+
+    if (activeRoomsCount >= MAX_ACTIVE_ROOMS_PER_HOST) {
+      throw new TooManyActiveRoomsError();
+    }
 
     // Генерируем уникальный код
     let code = generateRoomCode();
