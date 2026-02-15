@@ -12,3 +12,4 @@ export { ToastProvider, showNotification } from './toast';
 export { NameModal } from './name-modal';
 export { PlayerCard } from './player-card';
 export { EmptyPlayerSlot } from './empty-player-slot';
+export { AppFooter } from './app-footer';

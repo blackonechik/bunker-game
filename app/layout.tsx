@@ -2,16 +2,67 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { SocketProvider } from "@/app/providers";
 import "./globals.css";
-import { ToastProvider } from '@/src/shared/ui';
+import { AppFooter, ToastProvider } from '@/src/shared/ui';
 
 const geistSans = localFont({
-  src: "../public/fonts/gyByhwUxId8gMEwcGFWNOITd.woff2",
+  src: "../public/fonts/JetBrainsMono-Regular.woff2",
   variable: "--font-geist-sans",
   display: "swap",
 });
 
 const geistMono = localFont({
-  src: "../public/fonts/gyByhwUxId8gMEwcGFWNOITd.woff2",
+  src: [
+    {
+      path: "../public/fonts/JetBrainsMono-Light.woff2",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/JetBrainsMono-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/JetBrainsMono-Italic.woff2",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../public/fonts/JetBrainsMono-Medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/JetBrainsMono-SemiBold.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/JetBrainsMono-SemiBoldItalic.woff2",
+      weight: "600",
+      style: "italic",
+    },
+    {
+      path: "../public/fonts/JetBrainsMono-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/JetBrainsMono-BoldItalic.woff2",
+      weight: "700",
+      style: "italic",
+    },
+    {
+      path: "../public/fonts/JetBrainsMono-ExtraBold.woff2",
+      weight: "800",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/JetBrainsMono-ExtraBoldItalic.woff2",
+      weight: "800",
+      style: "italic",
+    },
+  ],
   variable: "--font-geist-mono",
   display: "swap",
 });
@@ -19,6 +70,9 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Bunker - Игра на выживание",
   description: "Онлайн игра Бункер - кто выживет в апокалипсисе?",
+  icons: {
+    icon: '/favicon.jpg',
+  },
 };
 
 export default function RootLayout({
@@ -37,18 +91,7 @@ export default function RootLayout({
             {children}
           </SocketProvider>
         </main>
-        <footer className="mt-20 border-t border-zinc-900 bg-black/40 backdrop-blur-md p-10 relative z-10 overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-[repeating-linear-gradient(90deg,#f59e0b,#f59e0b_20px,#000_20px,#000_40px)] opacity-40" />
-          <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="text-[10px] text-zinc-600 font-bold tracking-[0.2em] text-center md:text-left">
-              PROTOCOL 404 <br /> ARCHIVE-ID: BUNKER-S7
-            </div>
-            <div className="text-[9px] text-zinc-700 uppercase italic max-w-xs text-center md:text-right">
-              Property of the Core Administration. Unauthorized duplication will result in immediate life-support
-              termination.
-            </div>
-          </div>
-        </footer>
+        <AppFooter />
       </body>
     </html>
   );
