@@ -591,7 +591,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.35 }}
-              className="-translate-x-1/2 w-full max-w-3xl px-6"
+              className="w-full max-w-3xl px-6"
             >
               <div className="border border-zinc-800 bg-zinc-950/90 px-5 py-4">
                 <p className="text-[10px] uppercase tracking-[0.22em] text-zinc-500 mb-3">Итоги голосования</p>
