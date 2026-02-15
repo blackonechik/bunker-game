@@ -352,6 +352,24 @@ export class SocketServer {
       return false;
     }
 
+    if (round < 2) {
+      this.clearCardRevealTimer(roomId);
+      await RoomService.updateRoundTimer(roomId, null);
+      await RoomService.updateRoomState(roomId, RoomState.ROUND_START);
+      await this.emitRoomUpdate(roomId, roomCode);
+
+      setTimeout(async () => {
+        const currentRoom = await RoomService.getRoom(roomId);
+        if (!currentRoom || currentRoom.state !== RoomState.ROUND_START || currentRoom.currentRound !== round) {
+          return;
+        }
+
+        await this.startDiscussionRound(roomId, roomCode);
+      }, 1200);
+
+      return true;
+    }
+
     this.clearCardRevealTimer(roomId);
     await RoomService.updateRoomState(roomId, RoomState.VOTING);
     await RoomService.updateRoundTimer(roomId, null);
