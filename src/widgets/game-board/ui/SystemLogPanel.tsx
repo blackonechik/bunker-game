@@ -1,12 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ChatMessageDTO } from '@/shared/types';
-
-interface SystemLogPanelProps {
-  messages: ChatMessageDTO[];
-  onSendMessage: (message: string) => void;
-}
+import { Button } from '@/shared/ui';
+import { SystemLogPanelProps } from '../types';
 
 export function SystemLogPanel({ messages, onSendMessage }: SystemLogPanelProps) {
   const [inputValue, setInputValue] = useState('');
@@ -33,7 +29,7 @@ export function SystemLogPanel({ messages, onSendMessage }: SystemLogPanelProps)
         Логи системы
       </h2>
 
-      <div className="space-y-3 h-[430px] overflow-y-auto pr-2 text-xs leading-relaxed scrollbar scrollbar-thin scrollbar-thumb-orange-500 scrollbar-track-zinc-800">
+      <div className="space-y-3 h-[430px] overflow-y-auto pr-2 text-xs leading-relaxed scrollbar-thin scrollbar-thumb-orange-500 scrollbar-track-zinc-800">
         {visibleMessages.map((message, index) => (
           <p
             key={`${message.id}-${index}`}
@@ -56,13 +52,9 @@ export function SystemLogPanel({ messages, onSendMessage }: SystemLogPanelProps)
             placeholder="Отправить..."
             className="bg-black border border-zinc-700 text-xs p-2 w-full focus:outline-none focus:border-orange-500 transition-colors"
           />
-          <button
-            type="submit"
-            aria-label="Отправить сообщение"
-            className="bg-orange-600 px-3 hover:bg-orange-500 text-black text-xs font-bold"
-          >
+          <Button type="submit" size="small" className="!px-3 !py-2 !text-xs !bg-orange-600 !border-orange-500 hover:!bg-orange-500 !text-black">
             ОТПРАВИТЬ
-          </button>
+          </Button>
         </form>
       </div>
     </aside>

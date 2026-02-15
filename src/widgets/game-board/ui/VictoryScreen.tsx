@@ -1,12 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { PlayerDTO } from '@/shared/types';
 import { PlayerCardsList } from './PlayerCardsList';
-
-interface VictoryScreenProps {
-  winners: PlayerDTO[];
-}
+import { VictoryScreenProps } from '../types';
 
 export function VictoryScreen({ winners }: VictoryScreenProps) {
   const displayedWinners = winners.slice(0, 2);

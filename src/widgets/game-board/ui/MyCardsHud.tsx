@@ -1,15 +1,7 @@
 'use client';
 
-import { PlayerCardDTO } from '@/shared/types';
 import { getAccentClasses, getCardTypeLabel } from '@/shared/lib';
-
-interface MyCardsHudProps {
-  playerName: string;
-  cards: PlayerCardDTO[];
-  canReveal: boolean;
-  hasRevealedThisRound: boolean;
-  onReveal: (cardId: number) => void;
-}
+import { MyCardsHudProps } from '../types';
 
 export function MyCardsHud({ playerName, cards, canReveal, hasRevealedThisRound, onReveal }: MyCardsHudProps) {
   return (

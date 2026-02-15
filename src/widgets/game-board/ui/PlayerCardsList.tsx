@@ -1,13 +1,7 @@
 'use client';
 
-import { PlayerCardDTO } from '@/shared/types';
 import { getAccentClasses, getCardTypeLabel } from '@/shared/lib';
-
-interface PlayerCardsListProps {
-  cards: PlayerCardDTO[];
-  hiddenSlots?: number;
-  containerClassName?: string;
-}
+import { PlayerCardsListProps } from '../types';
 
 export function PlayerCardsList({
   cards,

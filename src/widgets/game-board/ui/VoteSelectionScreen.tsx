@@ -1,38 +1,11 @@
 'use client';
 
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/src/shared/ui';
 import { Title } from '@/src/shared/ui/title';
-
-interface VoteOptionItem {
-	id: number;
-	name: string;
-	description: string;
-	image: string;
-}
-
-interface VoteSelectionScreenProps {
-	title: string;
-	options: VoteOptionItem[];
-	onSelect: (id: number) => void;
-	mode: 'apocalypse' | 'location';
-}
-
-const APPEARANCE = {
-	apocalypse: {
-		hoverBorder: 'hover:border-orange-600/50',
-		badgeBg: 'bg-orange-600',
-		hoverText: 'group-hover:text-orange-500',
-		buttonHover: 'group-hover:bg-orange-600 group-hover:text-black',
-		corner: 'border-orange-600',
-	},
-	location: {
-		hoverBorder: 'hover:border-green-600/50',
-		badgeBg: 'bg-green-600',
-		hoverText: 'group-hover:text-green-500',
-		buttonHover: 'group-hover:bg-green-600 group-hover:text-black',
-		corner: 'border-green-600',
-	},
-} as const;
+import { VoteSelectionScreenProps } from '../types';
+import { VOTE_APPEARANCE, VoteOptionCard } from './vote-selection';
 
 export function VoteSelectionScreen({
 	title,
@@ -40,7 +13,17 @@ export function VoteSelectionScreen({
 	onSelect,
 	mode,
 }: VoteSelectionScreenProps) {
-	const appearance = APPEARANCE[mode];
+	const appearance = VOTE_APPEARANCE[mode];
+	const [activeIndex, setActiveIndex] = useState(0);
+	const normalizedActiveIndex = options.length === 0 ? 0 : Math.min(activeIndex, options.length - 1);
+
+	const goPrev = () => {
+		setActiveIndex((prev) => (prev === 0 ? options.length - 1 : prev - 1));
+	};
+
+	const goNext = () => {
+		setActiveIndex((prev) => (prev === options.length - 1 ? 0 : prev + 1));
+	};
 
 	return (
 		<div className="relative z-10 container mx-auto px-6 py-12">
@@ -50,35 +33,54 @@ export function VoteSelectionScreen({
 				</Title>
 			</div>
 
-			<section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-				{options.map((option) => (
-					<article
-						key={option.id}
-						className={`group
-							 relative bg-zinc-900 border-2 border-zinc-800 p-2 transition-all duration-300 ${appearance.hoverBorder}`}
+			<section className="md:hidden space-y-6">
+				<div className="overflow-hidden">
+					<motion.div
+						className="flex"
+						animate={{ x: `-${normalizedActiveIndex * 100}%` }}
+						transition={{ duration: 0.35, ease: 'easeInOut' }}
 					>
+						{options.map((option, index) => {
+							const isActive = index === normalizedActiveIndex;
 
-						<div className="overflow-hidden h-64 border border-zinc-800">
-							{/* eslint-disable-next-line @next/next/no-img-element */}
-							<img
-								src={option.image || 'https://images.unsplash.com/photo-1523575708161-ad0fc2a9b951?auto=format&fit=crop&q=80&w=1200'}
-								alt={option.name}
-								className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700 opacity-60 group-hover:opacity-100"
-							/>
-						</div>
+							return (
+								<VoteOptionCard
+									key={option.id}
+									option={option}
+									isActive={isActive}
+									hoverBorderClass={appearance.hoverBorder}
+									titleClassName={isActive ? appearance.activeTextColor : ''}
+									cornerClassName={appearance.corner}
+									descriptionMinHeightClass="min-h-[140px]"
+									onSelect={onSelect}
+								/>
+							);
+						})}
+					</motion.div>
+				</div>
 
-						<div className="p-4 bg-zinc-900 flex flex-col">
-							<h3 className={`text-xl font-bold text-zinc-100 uppercase mb-2 transition-colors ${appearance.hoverText}`}>
-								{option.name}
-							</h3>
-							<p className="text-sm text-zinc-400 mb-6 min-h-[160px]">{option.description}</p>
-							<Button className='w-full mt-auto' size='small' onClick={() => onSelect(option.id)}>
-								Голосовать
-							</Button>
-						</div>
+				{options.length > 1 && (
+					<div className="flex items-center justify-center gap-3">
+						<Button size="small" variant="secondary" onClick={goPrev}>Назад</Button>
+						<span className="text-xs text-zinc-500 uppercase tracking-[0.18em]">
+							{normalizedActiveIndex + 1} / {options.length}
+						</span>
+						<Button size="small" variant="secondary" onClick={goNext}>Вперёд</Button>
+					</div>
+				)}
+			</section>
 
-						<div className={`absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 ${appearance.corner}`} />
-					</article>
+			<section className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+				{options.map((option) => (
+					<VoteOptionCard
+						key={option.id}
+						option={option}
+						hoverBorderClass={appearance.hoverBorder}
+						titleClassName={appearance.hoverText}
+						cornerClassName={appearance.corner}
+						descriptionMinHeightClass="min-h-[160px]"
+						onSelect={onSelect}
+					/>
 				))}
 			</section>
 		</div>

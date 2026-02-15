@@ -1,14 +1,8 @@
 'use client';
 
-import { PlayerDTO } from '@/shared/types';
+import { Button } from '@/shared/ui';
 import { PlayerCardsList } from './PlayerCardsList';
-
-interface PlayersGridProps {
-  players: PlayerDTO[];
-  currentPlayerId?: number;
-  canVote: boolean;
-  onVote: (targetPlayerId: number) => void;
-}
+import { PlayersGridProps } from '../types';
 
 export function PlayersGrid({ players, currentPlayerId, canVote, onVote }: PlayersGridProps) {
   return (
@@ -77,14 +71,15 @@ export function PlayersGrid({ players, currentPlayerId, canVote, onVote }: Playe
               hiddenSlots={isEliminated ? 0 : Math.max(0, 8 - revealedCards.length)}
             />
 
-            <button
-              aria-label="Vote for Expulsion"
+            <Button
               disabled={!canVote || isCurrentPlayer || isEliminated}
               onClick={() => onVote(player.id)}
-              className="mt-4 w-full py-1 text-[10px] border uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-red-950 text-red-500 border-red-900 hover:bg-red-900 hover:text-white"
+              size="small"
+              variant="secondary"
+              className="mt-4 w-full !text-[10px] !tracking-widest !border-red-900 !text-red-500 !bg-red-950 hover:!bg-red-900 hover:!text-white disabled:!opacity-40"
             >
               Проголосовать
-            </button>
+            </Button>
           </article>
         );
       })}

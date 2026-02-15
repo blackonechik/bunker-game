@@ -1,17 +1,7 @@
 'use client';
 
 import { RoomState } from '@/shared/types';
-
-interface GameTopBarProps {
-  round: number;
-  state?: RoomState;
-  timer: number;
-  apocalypseName?: string;
-  locationName?: string;
-  gameDurationSeconds: number;
-  alivePlayersCount: number;
-  totalPlayersCount: number;
-}
+import { GameTopBarProps } from '../types';
 
 const DISCUSSION_DURATION = 60;
 

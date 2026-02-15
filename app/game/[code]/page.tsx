@@ -40,6 +40,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   const systemMessageKeysRef = useRef<Set<string>>(new Set());
   const introShownRef = useRef(false);
   const introTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const introRafRef = useRef<number | null>(null);
   const sessionUserId = session?.user?.id ?? null;
   const currentPlayer =
     players.find((player) => player.id === selfPlayerId) ??
@@ -101,6 +102,10 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
 
   useEffect(() => {
     return () => {
+      if (introRafRef.current !== null) {
+        cancelAnimationFrame(introRafRef.current);
+      }
+
       if (introTimeoutRef.current) {
         clearTimeout(introTimeoutRef.current);
       }
@@ -244,7 +249,10 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     }
 
     introShownRef.current = true;
-    setShowIntroNarrative(true);
+    introRafRef.current = requestAnimationFrame(() => {
+      setShowIntroNarrative(true);
+      introRafRef.current = null;
+    });
 
     if (introTimeoutRef.current) {
       clearTimeout(introTimeoutRef.current);
