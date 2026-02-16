@@ -82,6 +82,8 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 TELEGRAM_BOT_TOKEN=your_bot_token
 TELEGRAM_BOT_USERNAME=your_bot_username
 TELEGRAM_AUTH_MAX_AGE=300
+NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=your_bot_username
+NEXT_PUBLIC_TELEGRAM_MINI_APP_SHORT_NAME=your_mini_app_short_name
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -130,6 +132,8 @@ GOOGLE_CLIENT_SECRET=
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_BOT_USERNAME=
 TELEGRAM_AUTH_MAX_AGE=300
+NEXT_PUBLIC_TELEGRAM_BOT_USERNAME=
+NEXT_PUBLIC_TELEGRAM_MINI_APP_SHORT_NAME=
 
 # App
 NEXT_PUBLIC_APP_URL=https://your-domain.com
@@ -281,6 +285,8 @@ GitHub: [Your GitHub]
 - `TELEGRAM_BOT_TOKEN` — токен бота от BotFather.
 - `TELEGRAM_BOT_USERNAME` — username бота (без `@`).
 - `TELEGRAM_AUTH_MAX_AGE` — максимальный возраст `initData` в секундах (рекомендуется 300).
+- `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` — username бота для клиентской генерации invite-ссылки.
+- `NEXT_PUBLIC_TELEGRAM_MINI_APP_SHORT_NAME` — short name Mini App из BotFather (если задан).
 
 ### 3) Как работает авто-логин
 
@@ -289,6 +295,8 @@ GitHub: [Your GitHub]
 3. Сервер проверяет подпись Telegram (`HMAC-SHA256`), свежесть `auth_date` и anti-replay.
 4. Если пользователь новый — создается аккаунт, затем создается Better Auth сессия и выставляется cookie.
 5. UI автоматически получает сессию без ручного нажатия "Войти".
+6. При открытии invite-ссылки через `startapp` пользователь автоматически попадает в `лobby` (если ожидание) или `game` (если игра уже началась).
+7. Если комната завершена/неактивна — показывается уведомление "Игра завершена".
 
 ### 4) Безопасность
 

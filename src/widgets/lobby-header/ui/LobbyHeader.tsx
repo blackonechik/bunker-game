@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/shared/ui';
+import { getTelegramBotMiniAppLink } from '@/src/shared/lib/telegram-miniapp-link';
 
 interface LobbyHeaderProps {
 	code: string;
@@ -32,7 +33,12 @@ export function LobbyHeader({ code, currentPlayers, maxPlayers, isHost }: LobbyH
 			return;
 		}
 
-		const inviteUrl = `${window.location.origin}/lobby/${code}`;
+		const inviteUrl = getTelegramBotMiniAppLink(code);
+		if (!inviteUrl) {
+			handleCopy();
+			return;
+		}
+
 		const message = `Присоединяйся к игре в Бункер! Код комнаты: ${code}`;
 		const shareLink = `https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(message)}`;
 
