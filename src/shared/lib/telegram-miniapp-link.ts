@@ -23,22 +23,33 @@ export const parseRoomCodeFromStartParam = (startParam: string): string | null =
   return null;
 };
 
-export const getTelegramBotMiniAppLink = (roomCode: string): string | null => {
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME?.trim();
-  const miniAppShortName = process.env.NEXT_PUBLIC_TELEGRAM_MINI_APP_SHORT_NAME?.trim();
+type TelegramInviteLinkOptions = {
+  roomCode: string;
+  botUsername: string;
+  miniAppShortName?: string;
+};
 
-  if (!botUsername) {
-    return null;
-  }
-
-  const safeUsername = botUsername.replace(/^@/, '');
+export const getTelegramBotMiniAppLink = ({
+  roomCode,
+  botUsername,
+  miniAppShortName,
+}: TelegramInviteLinkOptions): string => {
+  const safeUsername = botUsername.trim().replace(/^@/, '');
+  const safeMiniAppShortName = miniAppShortName?.trim();
   const startParam = encodeRoomStartParam(roomCode);
 
-  if (miniAppShortName) {
-    return `https://t.me/${safeUsername}/${miniAppShortName}?startapp=${encodeURIComponent(startParam)}`;
+  if (safeMiniAppShortName) {
+    return `https://t.me/${safeUsername}/${safeMiniAppShortName}?startapp=${encodeURIComponent(startParam)}`;
   }
 
   return `https://t.me/${safeUsername}?startapp=${encodeURIComponent(startParam)}`;
+};
+
+export const getTelegramShareLink = (options: TelegramInviteLinkOptions): string => {
+  const inviteUrl = getTelegramBotMiniAppLink(options);
+  const message = `Присоединяйся к игре в Бункер! Код комнаты: ${options.roomCode.trim().toUpperCase()}`;
+
+  return `https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(message)}`;
 };
 
 export const getTelegramStartParamFromLocation = (): string => {

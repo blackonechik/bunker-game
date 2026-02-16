@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/shared/ui';
-import { getTelegramBotMiniAppLink } from '@/src/shared/lib/telegram-miniapp-link';
 
 interface LobbyHeaderProps {
 	code: string;
@@ -33,23 +32,34 @@ export function LobbyHeader({ code, currentPlayers, maxPlayers, isHost }: LobbyH
 			return;
 		}
 
-		const inviteUrl = getTelegramBotMiniAppLink(code);
-		if (!inviteUrl) {
-			handleCopy();
-			return;
-		}
+		const openShare = (shareLink: string) => {
+			const telegramWebApp = window.Telegram?.WebApp;
 
-		const message = `Присоединяйся к игре в Бункер! Код комнаты: ${code}`;
-		const shareLink = `https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(message)}`;
+			if (telegramWebApp?.openTelegramLink) {
+				telegramWebApp.openTelegramLink(shareLink);
+				return;
+			}
 
-		const telegramWebApp = window.Telegram?.WebApp;
+			window.location.href = shareLink;
+		};
 
-		if (telegramWebApp?.openTelegramLink) {
-			telegramWebApp.openTelegramLink(shareLink);
-			return;
-		}
+		void fetch(`/api/telegram/invite-link/${code}`, {
+			method: 'GET',
+			cache: 'no-store',
+		})
+			.then((response) => response.json())
+			.then((payload: { success?: boolean; data?: { shareLink?: string } }) => {
+				const shareLink = payload.data?.shareLink;
+				if (payload.success && shareLink) {
+					openShare(shareLink);
+					return;
+				}
 
-		window.open(shareLink, '_blank', 'noopener,noreferrer');
+				handleCopy();
+			})
+			.catch(() => {
+				handleCopy();
+			});
 	};
 
 	return (
