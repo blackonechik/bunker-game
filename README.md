@@ -78,6 +78,11 @@ BETTER_AUTH_TRUSTED_ORIGINS=http://localhost:3000
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
+# Telegram Mini App
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_BOT_USERNAME=your_bot_username
+TELEGRAM_AUTH_MAX_AGE=300
+
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
@@ -120,6 +125,11 @@ BETTER_AUTH_URL=https://your-domain.com
 BETTER_AUTH_TRUSTED_ORIGINS=https://your-domain.com
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
+
+# Telegram Mini App
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_BOT_USERNAME=
+TELEGRAM_AUTH_MAX_AGE=300
 
 # App
 NEXT_PUBLIC_APP_URL=https://your-domain.com
@@ -254,4 +264,35 @@ GitHub: [Your GitHub]
 ---
 
 **Приятной игры! 🎲🏚️**
+
+## 📲 Telegram Mini App (автоавторизация)
+
+В проекте добавлен вход через Telegram Mini App с автоматической авторизацией пользователя при открытии приложения внутри Telegram.
+
+### 1) Настройка бота и Mini App в BotFather
+
+1. Создайте бота: `/newbot`.
+2. Создайте Mini App: `/newapp`.
+3. Укажите URL Mini App: `https://your-domain.com` (обязательно HTTPS).
+4. Привяжите Mini App к боту через menu/web_app кнопку.
+
+### 2) Обязательные переменные окружения
+
+- `TELEGRAM_BOT_TOKEN` — токен бота от BotFather.
+- `TELEGRAM_BOT_USERNAME` — username бота (без `@`).
+- `TELEGRAM_AUTH_MAX_AGE` — максимальный возраст `initData` в секундах (рекомендуется 300).
+
+### 3) Как работает авто-логин
+
+1. Клиент в Mini App получает `window.Telegram.WebApp.initData`.
+2. Фронт отправляет `initData` в `POST /api/auth/telegram/miniapp`.
+3. Сервер проверяет подпись Telegram (`HMAC-SHA256`), свежесть `auth_date` и anti-replay.
+4. Если пользователь новый — создается аккаунт, затем создается Better Auth сессия и выставляется cookie.
+5. UI автоматически получает сессию без ручного нажатия "Войти".
+
+### 4) Безопасность
+
+- Никогда не доверяйте `initDataUnsafe`, только `initData` + серверная проверка hash.
+- Не храните `TELEGRAM_BOT_TOKEN` в репозитории.
+- Держите `TELEGRAM_AUTH_MAX_AGE` коротким (обычно 300 секунд).
 

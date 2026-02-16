@@ -263,7 +263,12 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
     <>
       <div className="bg-zinc-950 text-zinc-200 font-mono">
         <div className="max-w-6xl mx-auto px-4 py-8">
-          <LobbyHeader code={code} currentPlayers={players.length} maxPlayers={room?.maxPlayers || 0} />
+          <LobbyHeader
+            code={code}
+            currentPlayers={players.length}
+            maxPlayers={room?.maxPlayers || 0}
+            isHost={isHost}
+          />
 
           <LobbyPlayers
             players={players}

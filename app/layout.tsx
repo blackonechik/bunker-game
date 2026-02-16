@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import Script from 'next/script';
 import { SocketProvider } from "@/app/providers";
 import "./globals.css";
 import { AppFooter, ToastProvider } from '@/src/shared/ui';
+import { TelegramAutoAuthProvider } from '@/src/app/providers/telegram-auto-auth-provider';
 
 const geistSans = localFont({
   src: "../public/fonts/JetBrainsMono-Regular.woff2",
@@ -85,11 +87,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950 selection:bg-amber-500 selection:text-black`}
       >
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <main className='max-w-7xl mx-auto px-4 py-8 text-zinc-200 font-mono'>
           <ToastProvider />
-          <SocketProvider>
-            {children}
-          </SocketProvider>
+          <TelegramAutoAuthProvider>
+            <SocketProvider>
+              {children}
+            </SocketProvider>
+          </TelegramAutoAuthProvider>
         </main>
       </body>
     </html>

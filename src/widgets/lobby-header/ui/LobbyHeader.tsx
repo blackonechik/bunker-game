@@ -8,16 +8,42 @@ interface LobbyHeaderProps {
 	code: string;
 	currentPlayers: number;
 	maxPlayers: number;
+	isHost: boolean;
 }
 
-export function LobbyHeader({ code, currentPlayers, maxPlayers }: LobbyHeaderProps) {
+export function LobbyHeader({ code, currentPlayers, maxPlayers, isHost }: LobbyHeaderProps) {
 	const [copied, setCopied] = useState(false);
+	const [isTelegramMiniApp] = useState(() => {
+		if (typeof window === 'undefined') return false;
+		return Boolean(window.Telegram?.WebApp?.initData);
+	});
+
+	const canShareInTelegram = isHost && isTelegramMiniApp;
 
 	const handleCopy = () => {
 		const link = `${window.location.origin}/lobby/${code}`;
 		navigator.clipboard.writeText(link);
 		setCopied(true);
 		setTimeout(() => setCopied(false), 2000);
+	};
+
+	const handleShareInvite = () => {
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		const inviteUrl = `${window.location.origin}/lobby/${code}`;
+		const message = `Присоединяйся к игре в Бункер! Код комнаты: ${code}`;
+		const shareLink = `https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(message)}`;
+
+		const telegramWebApp = window.Telegram?.WebApp;
+
+		if (telegramWebApp?.openTelegramLink) {
+			telegramWebApp.openTelegramLink(shareLink);
+			return;
+		}
+
+		window.open(shareLink, '_blank', 'noopener,noreferrer');
 	};
 
 	return (
@@ -33,9 +59,15 @@ export function LobbyHeader({ code, currentPlayers, maxPlayers }: LobbyHeaderPro
 				</p>
 			</div>
 
-			<Button onClick={handleCopy} variant="secondary" size="small">
-				{copied ? '✓ Скопировано' : `ID: ${code} • Нажми, чтобы скопировать`}
-			</Button>
+			{canShareInTelegram ? (
+				<Button onClick={handleShareInvite} variant="secondary" size="small">
+					{`ID: ${code} • Нажми, чтобы отправить`}
+				</Button>
+			) : (
+				<Button onClick={handleCopy} variant="secondary" size="small">
+					{copied ? '✓ Скопировано' : `ID: ${code} • Нажми, чтобы скопировать`}
+				</Button>
+			)}
 		</motion.div>
 	);
 }
