@@ -312,8 +312,6 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
             currentPlayers={players.length}
             maxPlayers={room?.maxPlayers || 0}
             isHost={isHost}
-            currentUserName={session?.user?.name ?? null}
-            currentUserImage={session?.user?.image ?? null}
           />
 
           <LobbyPlayers
