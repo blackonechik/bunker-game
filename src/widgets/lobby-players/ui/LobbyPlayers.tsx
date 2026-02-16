@@ -29,6 +29,7 @@ export function LobbyPlayers({ players, maxPlayers, currentPlayerId, isHost, onK
 					<PlayerCard
 						key={player.id}
 						name={player.name}
+						image={player.image}
 						isHost={player.isHost}
 						isYou={isYou}
 						isOnline={player.isOnline}

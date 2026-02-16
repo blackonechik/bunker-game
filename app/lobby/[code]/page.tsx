@@ -25,6 +25,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
   const [error, setError] = useState('');
   const [showNameModal, setShowNameModal] = useState(false);
   const [joiningRoom, setJoiningRoom] = useState(false);
+  const [telegramMiniAppStatus, setTelegramMiniAppStatus] = useState<'unknown' | 'yes' | 'no'>('unknown');
   const resumeAttemptedRef = useRef(false);
 
   const sessionUserId = session?.user?.id ?? null;
@@ -38,6 +39,45 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
   }, [params]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      setTelegramMiniAppStatus('no');
+      return;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 40;
+
+    const detectMiniApp = () => {
+      const webApp = window.Telegram?.WebApp;
+      const hasMiniAppContext = Boolean(webApp?.initData || webApp?.initDataUnsafe?.start_param);
+
+      if (hasMiniAppContext) {
+        setTelegramMiniAppStatus('yes');
+        return true;
+      }
+
+      return false;
+    };
+
+    if (detectMiniApp()) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      attempts += 1;
+
+      if (detectMiniApp() || attempts >= maxAttempts) {
+        setTelegramMiniAppStatus((prev) => (prev === 'yes' ? 'yes' : 'no'));
+        window.clearInterval(interval);
+      }
+    }, 100);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isConnected) {
       resumeAttemptedRef.current = false;
     }
@@ -47,6 +87,10 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
     if (!code || isPending || !isConnected) return;
 
     if (!session) {
+      if (telegramMiniAppStatus !== 'no') {
+        return;
+      }
+
       signIn.social({ provider: 'google', callbackURL: `/lobby/${code}` });
       return;
     }
@@ -100,7 +144,7 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
     return () => {
       cancelled = true;
     };
-  }, [code, emit, isConnected, isPending, joiningRoom, playerName, session]);
+  }, [code, emit, isConnected, isPending, joiningRoom, playerName, session, telegramMiniAppStatus]);
 
   useEffect(() => {
     if (!isConnected || !sessionUserId) return;
@@ -268,6 +312,8 @@ export default function LobbyPage({ params }: { params: Promise<{ code: string }
             currentPlayers={players.length}
             maxPlayers={room?.maxPlayers || 0}
             isHost={isHost}
+            currentUserName={session?.user?.name ?? null}
+            currentUserImage={session?.user?.image ?? null}
           />
 
           <LobbyPlayers

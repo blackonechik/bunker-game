@@ -1,9 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 interface PlayerCardProps {
 	name: string;
+	image?: string | null;
 	isHost: boolean;
 	isYou: boolean;
 	isOnline: boolean;
@@ -13,7 +15,7 @@ interface PlayerCardProps {
 	canKick?: boolean;
 }
 
-export function PlayerCard({ name, isHost, isYou, isOnline, isBot = false, animationDelay = 0, onKick, canKick }: PlayerCardProps) {
+export function PlayerCard({ name, image, isHost, isYou, isOnline, isBot = false, animationDelay = 0, onKick, canKick }: PlayerCardProps) {
 	return (
 		<motion.div
 			initial={{ opacity: 0, scale: 0.8 }}
@@ -37,15 +39,25 @@ export function PlayerCard({ name, isHost, isYou, isOnline, isBot = false, anima
 				</button>
 			)}
 
-			<div
-				className={`w-12 h-12 ${
-					isYou ? 'bg-emerald-500' : 'bg-zinc-800'
-				} rounded-full flex items-center justify-center ${
-					isYou ? 'text-black' : 'text-zinc-600'
-				} font-bold border-2 ${isYou ? 'border-emerald-500' : 'border-zinc-700'}`}
-			>
-				{isYou ? 'ВЫ' : name.substring(0, 2).toUpperCase()}
-			</div>
+			{image ? (
+				<Image
+					src={image}
+					alt={name}
+					className={`w-12 h-12 rounded-full border-2 object-cover ${isYou ? 'border-emerald-500' : 'border-zinc-700'}`}
+					width={48}
+					height={48}
+				/>
+			) : (
+				<div
+					className={`w-12 h-12 ${
+						isYou ? 'bg-emerald-500' : 'bg-zinc-800'
+					} rounded-full flex items-center justify-center ${
+						isYou ? 'text-black' : 'text-zinc-600'
+					} font-bold border-2 ${isYou ? 'border-emerald-500' : 'border-zinc-700'}`}
+				>
+					{isYou ? 'ВЫ' : name.substring(0, 2).toUpperCase()}
+				</div>
+			)}
 			<span className="text-xs font-bold uppercase truncate w-full text-center">{name}</span>
 			{isBot && <span className="text-[10px] text-sky-400 font-bold uppercase">Бот</span>}
 			{isHost && <span className="text-[10px] text-amber-500 font-bold uppercase">Владелец бункера</span>}

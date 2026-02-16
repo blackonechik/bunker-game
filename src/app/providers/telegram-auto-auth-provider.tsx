@@ -36,41 +36,58 @@ export function TelegramAutoAuthProvider({ children }: Props) {
     }
 
     let attempts = 0;
-    const maxAttempts = 50;
+    const maxAttempts = 300;
 
     const syncTelegramState = () => {
       const webApp = window.Telegram?.WebApp;
 
       if (!webApp) {
-        return;
+        return false;
       }
 
       webApp.ready?.();
       webApp.expand?.();
 
       if (webApp.initData) {
-        setTelegramInitData(webApp.initData);
+        setTelegramInitData((prev) => prev || webApp.initData || '');
       }
 
       const startParamFromWebApp = webApp.initDataUnsafe?.start_param;
       if (startParamFromWebApp) {
         setStartParam((prev) => prev || startParamFromWebApp);
       }
+
+      return Boolean(webApp.initData);
     };
 
     syncTelegramState();
 
+    const onFocus = () => {
+      syncTelegramState();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncTelegramState();
+      }
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     const interval = window.setInterval(() => {
       attempts += 1;
-      syncTelegramState();
+      const hasInitData = syncTelegramState();
 
-      if (attempts >= maxAttempts) {
+      if (hasInitData || attempts >= maxAttempts) {
         window.clearInterval(interval);
       }
     }, 100);
 
     return () => {
       window.clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, []);
 
@@ -107,7 +124,7 @@ export function TelegramAutoAuthProvider({ children }: Props) {
           },
         });
 
-        router.refresh();
+        window.location.reload();
       } catch {
         requestedRef.current = false;
       }
