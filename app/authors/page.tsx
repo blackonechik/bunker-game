@@ -28,6 +28,16 @@ const authors: Author[] = [
 		telegramHandle: 'aleksa_creat',
 		accentColor: 'amber',
 	},
+	{
+		id: 3,
+		name: 'Денис',
+		nickname: 'Anonym_Code',
+		role: 'Тестировщик',
+		description:
+			'Специалист по контролю качества. Обеспечивает стабильность работы систем убежища.',
+		telegramHandle: 'Anonym_Code',
+		accentColor: 'blue',
+	},
 ];
 
 export default function AuthorsPage() {

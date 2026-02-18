@@ -5,7 +5,7 @@ import { MyCardsHudProps } from '../types';
 
 export function MyCardsHud({ playerName, cards, canReveal, hasRevealedThisRound, onReveal }: MyCardsHudProps) {
   return (
-    <div className="bg-zinc-950 border-2 border-zinc-800 shadow-[0_10px_40px_rgba(0,0,0,0.6)] relative">
+    <div className="bg-zinc-950 border-2 border-zinc-800 shadow-[0_10px_40px_rgba(0,0,0,0.6)] relative lg:fixed lg:top-6 lg:left-6 lg:z-30 lg:w-[320px]">
         <div className="p-3">
           <div className="flex justify-between items-end mb-6 gap-4 flex-wrap">
             <div>
