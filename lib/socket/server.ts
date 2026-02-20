@@ -255,14 +255,25 @@ export class SocketServer {
           const payload = verifyToken(data.token);
           if (!payload) throw new Error('Неверный токен');
 
+          const currentPlayer = await RoomService.getPlayerById(payload.playerId);
+          if (!currentPlayer || !currentPlayer.isAlive) {
+            throw new Error('Выбывшие игроки не могут голосовать');
+          }
+
           const room = await RoomService.getRoom(payload.roomId);
           if (!room) throw new Error('Комната не найдена');
+
+          const players = await RoomService.getPlayers(room.id);
+          const target = players.find((player) => player.id === data.targetPlayerId);
+
+          if (!target || !target.isAlive) {
+            throw new Error('Нельзя голосовать за выбывшего игрока');
+          }
 
           await GameService.votePlayer(room.id, payload.playerId, data.targetPlayerId, room.currentRound);
 
           callback({ success: true });
 
-          const players = await RoomService.getPlayers(room.id);
           const alivePlayers = players.filter((p: { isAlive: boolean }) => p.isAlive);
           const votes = await GameService.countPlayerVotes(room.id, room.currentRound);
 

@@ -5,6 +5,9 @@ import { PlayerCardsList } from './PlayerCardsList';
 import { PlayersGridProps } from '../types';
 
 export function PlayersGrid({ players, currentPlayerId, canVote, onVote }: PlayersGridProps) {
+  const currentPlayer = players.find((player) => player.id === currentPlayerId);
+  const isCurrentPlayerAlive = currentPlayer?.isAlive ?? true;
+
   return (
     <section className="grid grid-cols-3 max-xl:grid-cols-2 max-md:grid-cols-1 gap-3">
       {players.map((player, index) => {
@@ -71,15 +74,17 @@ export function PlayersGrid({ players, currentPlayerId, canVote, onVote }: Playe
               hiddenSlots={isEliminated ? 0 : Math.max(0, 8 - revealedCards.length)}
             />
 
-            <Button
-              disabled={!canVote || isCurrentPlayer || isEliminated}
-              onClick={() => onVote(player.id)}
-              size="small"
-              variant="secondary"
-              className="mt-4 w-full !text-[10px] !tracking-widest !border-red-900 !text-red-500 !bg-red-950 hover:!bg-red-900 hover:!text-white disabled:!opacity-40"
-            >
-              Проголосовать
-            </Button>
+            {isCurrentPlayerAlive && !isEliminated && (
+              <Button
+                disabled={!canVote || isCurrentPlayer || isEliminated}
+                onClick={() => onVote(player.id)}
+                size="small"
+                variant="secondary"
+                className="mt-4 w-full !text-[10px] !tracking-widest !border-red-900 !text-red-500 !bg-red-950 hover:!bg-red-900 hover:!text-white disabled:!opacity-40"
+              >
+                Проголосовать
+              </Button>
+            )}
           </article>
         );
       })}

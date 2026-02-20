@@ -901,11 +901,22 @@ export class SocketServer {
         try {
           const player = await this.getConnectedPlayer(socket);
 
+          if (!player.isAlive) {
+            throw new Error('Выбывшие игроки не могут голосовать');
+          }
+
           const room = await RoomService.getRoom(player.roomId);
           if (!room) throw new Error('Комната не найдена');
 
           if (room.state !== RoomState.VOTING) {
             throw new Error('Сейчас нельзя голосовать за исключение');
+          }
+
+          const players = await RoomService.getPlayers(room.id);
+          const target = players.find((roomPlayer) => roomPlayer.id === data.targetPlayerId);
+
+          if (!target || !target.isAlive) {
+            throw new Error('Нельзя голосовать за выбывшего игрока');
           }
 
           await GameService.votePlayer(room.id, player.id, data.targetPlayerId, room.currentRound);

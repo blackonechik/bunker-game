@@ -111,13 +111,25 @@ export class GameService {
       return acc;
     }, {} as Record<string, Card[]>);
 
-    // Раздаем по одной карте каждого типа каждому игроку
-    for (const player of players) {
-      for (const type of Object.keys(cardsByType)) {
-        const typeCards = cardsByType[type];
-        if (typeCards.length === 0) continue;
+    for (const type of Object.keys(cardsByType)) {
+      const typeCards = cardsByType[type];
+      if (typeCards.length < players.length) {
+        throw new Error(`Недостаточно карт типа ${type} для уникальной раздачи`);
+      }
+    }
 
-        const randomCard = selectRandom(typeCards, 1)[0];
+    const shuffledCardsByType = Object.fromEntries(
+      Object.entries(cardsByType).map(([type, typeCards]) => [type, selectRandom(typeCards, typeCards.length)])
+    ) as Record<string, Card[]>;
+
+    // Раздаем по одной уникальной карте каждого типа каждому игроку
+    for (const player of players) {
+      for (const type of Object.keys(shuffledCardsByType)) {
+        const randomCard = shuffledCardsByType[type].pop();
+        if (!randomCard) {
+          continue;
+        }
+
         const playerCard = playerCardRepo.create({
           playerId: player.id,
           cardId: randomCard.id,
@@ -142,6 +154,20 @@ export class GameService {
   static async votePlayer(roomId: number, voterId: number, targetId: number, round: number) {
     const ds = getDataSource();
     const voteRepo = ds.getRepository(Vote);
+    const playerRepo = ds.getRepository(Player);
+
+    const [voter, target] = await Promise.all([
+      playerRepo.findOne({ where: { id: voterId, roomId } }),
+      playerRepo.findOne({ where: { id: targetId, roomId } }),
+    ]);
+
+    if (!voter || !voter.isAlive) {
+      throw new Error('Выбывшие игроки не могут голосовать');
+    }
+
+    if (!target || !target.isAlive) {
+      throw new Error('Нельзя голосовать за выбывшего игрока');
+    }
 
     // Удаляем предыдущий голос
     await voteRepo.delete({ roomId, voterId, round, type: VoteType.PLAYER });
