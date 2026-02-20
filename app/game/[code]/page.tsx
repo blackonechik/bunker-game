@@ -632,7 +632,6 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
             <main className="relative z-20 py-6 grid grid-cols-12 max-lg:grid-cols-1 gap-4">
               <div className="col-span-3 max-lg:col-span-1 flex flex-col gap-4">
                 {currentPlayer && (
-                  <div className="lg:invisible">
                     <MyCardsHud
                       playerName={currentPlayer.name}
                       cards={currentPlayer.cards || []}
@@ -640,12 +639,11 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
                       hasRevealedThisRound={hasRevealedThisRound}
                       onReveal={handleRevealCard}
                     />
-                  </div>
                 )}
                 <SystemLogPanel messages={messages} onSendMessage={handleSendMessage} />
               </div>
 
-              <div className="col-span-9 max-lg:col-span-1 lg:ml-[340px]">
+              <div className="col-span-9 max-lg:col-span-1">
                 <PlayersGrid
                   players={players}
                   currentPlayerId={currentPlayerId}
