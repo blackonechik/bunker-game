@@ -44,6 +44,13 @@ const trustedOrigins = Array.from(
 
 const databaseConnection = getDatabaseConnectionOptions();
 
+console.info('[auth] database configuration', {
+  host: databaseConnection.host,
+  port: databaseConnection.port,
+  database: databaseConnection.database,
+  user: databaseConnection.user,
+});
+
 const pool = createPool({
   host: databaseConnection.host,
   port: databaseConnection.port,
@@ -52,6 +59,54 @@ const pool = createPool({
   database: databaseConnection.database,
   connectionLimit: 10,
 });
+
+let hasLoggedInitialDatabaseProbe = false;
+
+const logDatabaseProbeError = (error: unknown) => {
+  if (!(error instanceof Error)) {
+    console.error('[auth] database probe failed', { error });
+    return;
+  }
+
+  const networkError = error as Error & {
+    code?: string;
+    errno?: number;
+    syscall?: string;
+    address?: string;
+    port?: number;
+    hostname?: string;
+    errors?: unknown[];
+  };
+
+  console.error('[auth] database probe failed', {
+    name: networkError.name,
+    message: networkError.message,
+    code: networkError.code,
+    errno: networkError.errno,
+    syscall: networkError.syscall,
+    address: networkError.address,
+    port: networkError.port,
+    hostname: networkError.hostname,
+    errors: networkError.errors,
+    stack: networkError.stack,
+  });
+};
+
+const runInitialDatabaseProbe = async () => {
+  if (hasLoggedInitialDatabaseProbe) {
+    return;
+  }
+
+  hasLoggedInitialDatabaseProbe = true;
+
+  try {
+    const connection = await pool.getConnection();
+    console.info('[auth] database probe connected');
+    connection.release();
+  } catch (error) {
+    logDatabaseProbeError(error);
+  }
+};
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID ?? process.env.AUTH_GOOGLE_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET ?? process.env.AUTH_GOOGLE_SECRET;
@@ -161,3 +216,5 @@ export const auth = betterAuth({
   },
   plugins: [nextCookies(), telegramMiniAppPlugin],
 });
+
+void runInitialDatabaseProbe();
