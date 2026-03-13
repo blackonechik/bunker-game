@@ -4,6 +4,7 @@ import { createPool } from 'mysql2/promise';
 import { createAuthEndpoint, APIError } from 'better-auth/api';
 import { setSessionCookie } from 'better-auth/cookies';
 import * as z from 'zod';
+import { getDatabaseConnectionOptions } from '@/src/shared/api/db/connection-options';
 import {
   TELEGRAM_EMAIL_DOMAIN,
   buildTelegramDisplayName,
@@ -41,12 +42,14 @@ const trustedOrigins = Array.from(
   )
 );
 
+const databaseConnection = getDatabaseConnectionOptions();
+
 const pool = createPool({
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT!, 10),
-  user: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
+  host: databaseConnection.host,
+  port: databaseConnection.port,
+  user: databaseConnection.user,
+  password: databaseConnection.password,
+  database: databaseConnection.database,
   connectionLimit: 10,
 });
 

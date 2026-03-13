@@ -11,14 +11,17 @@ import { Vote } from '@/lib/entities/Vote';
 import { ApocalypseVote } from '@/lib/entities/ApocalypseVote';
 import { LocationVote } from '@/lib/entities/LocationVote';
 import { ChatMessage } from '@/lib/entities/ChatMessage';
+import { getDatabaseConnectionOptions } from '@/src/shared/api/db/connection-options';
+
+const databaseConnection = getDatabaseConnectionOptions();
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT!),
-  username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
+  host: databaseConnection.host,
+  port: databaseConnection.port,
+  username: databaseConnection.user,
+  password: databaseConnection.password,
+  database: databaseConnection.database,
   synchronize: process.env.NODE_ENV === 'development',
   logging: false,
   entities: [
