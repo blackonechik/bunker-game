@@ -2,7 +2,9 @@ version: "3.9"
 
 services:
   app:
-    image: ${IMAGE_NAME:-ghcr.io/blackonechik/bunker-game}:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: bunker-game
     restart: unless-stopped
     env_file:
