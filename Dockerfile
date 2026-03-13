@@ -19,8 +19,9 @@ RUN npm run build
 
 # Устанавливаем порт, который слушает приложение
 ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
 EXPOSE 3000
 
 # Запуск приложения
-CMD ["npm", "run", "start", "--", "-H", "0.0.0.0", "-p", "3000"]
+CMD ["npm", "run", "start"]

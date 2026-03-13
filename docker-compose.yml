@@ -9,4 +9,4 @@ services:
       - .env
     ports:
       - "3000:3000"   # пробрасываем порт наружу
-    command: npm run start -- -H 0.0.0.0 -p 3000
+    command: npm run start
