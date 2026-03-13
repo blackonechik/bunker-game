@@ -1,5 +1,6 @@
-# Базовый образ с Node.js 20
-FROM node:20-alpine
+# Базовый образ с Node.js 20 на Debian.
+# Это уменьшает вероятность DNS-ошибок EAI_AGAIN при обращении к внутренним docker hostname.
+FROM node:20-bookworm-slim
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
