@@ -17,6 +17,11 @@ COPY . .
 # Собираем Next.js
 RUN npm run build
 
+# Для standalone runtime Next.js ожидает public и .next/static рядом с server.js
+RUN mkdir -p .next/standalone/.next \
+  && cp -R public .next/standalone/public \
+  && cp -R .next/static .next/standalone/.next/static
+
 # Устанавливаем порт, который слушает приложение
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
