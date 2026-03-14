@@ -2408,6 +2408,1119 @@
         "value": "Помнит на изусть каждую серию 'Сватов'",
         "description": "Помнит на изусть каждую серию 'Сватов'",
         "rarity": "common"
+      },
+      {
+        "id": 341,
+        "type": "profession",
+        "value": "Биоинженер",
+        "description": "Биоинженер",
+        "rarity": "common"
+      },
+      {
+        "id": 342,
+        "type": "profession",
+        "value": "Инженер-энергетик",
+        "description": "Инженер-энергетик",
+        "rarity": "common"
+      },
+      {
+        "id": 343,
+        "type": "profession",
+        "value": "Плотник",
+        "description": "Плотник",
+        "rarity": "common"
+      },
+      {
+        "id": 344,
+        "type": "profession",
+        "value": "Фельдшер",
+        "description": "Фельдшер",
+        "rarity": "common"
+      },
+      {
+        "id": 345,
+        "type": "profession",
+        "value": "Агроном",
+        "description": "Агроном",
+        "rarity": "common"
+      },
+      {
+        "id": 346,
+        "type": "profession",
+        "value": "Электрик",
+        "description": "Электрик",
+        "rarity": "common"
+      },
+      {
+        "id": 347,
+        "type": "profession",
+        "value": "Пилот дронов",
+        "description": "Пилот дронов",
+        "rarity": "common"
+      },
+      {
+        "id": 348,
+        "type": "profession",
+        "value": "Картограф",
+        "description": "Картограф",
+        "rarity": "common"
+      },
+      {
+        "id": 349,
+        "type": "profession",
+        "value": "Спасатель МЧС",
+        "description": "Спасатель МЧС",
+        "rarity": "common"
+      },
+      {
+        "id": 350,
+        "type": "profession",
+        "value": "Токсиколог",
+        "description": "Токсиколог",
+        "rarity": "common"
+      },
+      {
+        "id": 351,
+        "type": "profession",
+        "value": "Пекарь",
+        "description": "Пекарь",
+        "rarity": "common"
+      },
+      {
+        "id": 352,
+        "type": "profession",
+        "value": "Фармацевт",
+        "description": "Фармацевт",
+        "rarity": "common"
+      },
+      {
+        "id": 353,
+        "type": "profession",
+        "value": "Кузнец",
+        "description": "Кузнец",
+        "rarity": "common"
+      },
+      {
+        "id": 354,
+        "type": "profession",
+        "value": "Гидролог",
+        "description": "Гидролог",
+        "rarity": "common"
+      },
+      {
+        "id": 355,
+        "type": "profession",
+        "value": "Сапёр",
+        "description": "Сапёр",
+        "rarity": "common"
+      },
+      {
+        "id": 356,
+        "type": "profession",
+        "value": "Кинолог",
+        "description": "Кинолог",
+        "rarity": "common"
+      },
+      {
+        "id": 357,
+        "type": "profession",
+        "value": "Оператор связи",
+        "description": "Оператор связи",
+        "rarity": "common"
+      },
+      {
+        "id": 358,
+        "type": "profession",
+        "value": "Архитектор",
+        "description": "Архитектор",
+        "rarity": "common"
+      },
+      {
+        "id": 359,
+        "type": "profession",
+        "value": "Техник-протезист",
+        "description": "Техник-протезист",
+        "rarity": "common"
+      },
+      {
+        "id": 360,
+        "type": "profession",
+        "value": "Микробиолог",
+        "description": "Микробиолог",
+        "rarity": "common"
+      },
+      {
+        "id": 361,
+        "type": "health",
+        "value": "Хроническая бессонница",
+        "description": "Хроническая бессонница",
+        "rarity": "common"
+      },
+      {
+        "id": 362,
+        "type": "health",
+        "value": "Лёгкая астма",
+        "description": "Лёгкая астма",
+        "rarity": "common"
+      },
+      {
+        "id": 363,
+        "type": "health",
+        "value": "Аллергия на пыльцу",
+        "description": "Аллергия на пыльцу",
+        "rarity": "common"
+      },
+      {
+        "id": 364,
+        "type": "health",
+        "value": "Хорошее зрение, но слабый слух",
+        "description": "Хорошее зрение, но слабый слух",
+        "rarity": "common"
+      },
+      {
+        "id": 365,
+        "type": "health",
+        "value": "Старая травма колена",
+        "description": "Старая травма колена",
+        "rarity": "common"
+      },
+      {
+        "id": 366,
+        "type": "health",
+        "value": "Мигрень при стрессе",
+        "description": "Мигрень при стрессе",
+        "rarity": "common"
+      },
+      {
+        "id": 367,
+        "type": "health",
+        "value": "Непереносимость лактозы",
+        "description": "Непереносимость лактозы",
+        "rarity": "common"
+      },
+      {
+        "id": 368,
+        "type": "health",
+        "value": "Железная выносливость",
+        "description": "Железная выносливость",
+        "rarity": "common"
+      },
+      {
+        "id": 369,
+        "type": "health",
+        "value": "Повышенная тревожность",
+        "description": "Повышенная тревожность",
+        "rarity": "common"
+      },
+      {
+        "id": 370,
+        "type": "health",
+        "value": "Цветовая слепота",
+        "description": "Цветовая слепота",
+        "rarity": "common"
+      },
+      {
+        "id": 371,
+        "type": "health",
+        "value": "Сахарный диабет 2 типа",
+        "description": "Сахарный диабет 2 типа",
+        "rarity": "common"
+      },
+      {
+        "id": 372,
+        "type": "health",
+        "value": "Быстрое восстановление после нагрузок",
+        "description": "Быстрое восстановление после нагрузок",
+        "rarity": "common"
+      },
+      {
+        "id": 373,
+        "type": "health",
+        "value": "Тремор рук",
+        "description": "Тремор рук",
+        "rarity": "common"
+      },
+      {
+        "id": 374,
+        "type": "health",
+        "value": "Аллергия на пенициллин",
+        "description": "Аллергия на пенициллин",
+        "rarity": "common"
+      },
+      {
+        "id": 375,
+        "type": "health",
+        "value": "Идеально здоров",
+        "description": "Идеально здоров",
+        "rarity": "common"
+      },
+      {
+        "id": 376,
+        "type": "health",
+        "value": "Слабый иммунитет",
+        "description": "Слабый иммунитет",
+        "rarity": "common"
+      },
+      {
+        "id": 377,
+        "type": "health",
+        "value": "Больная спина",
+        "description": "Больная спина",
+        "rarity": "common"
+      },
+      {
+        "id": 378,
+        "type": "health",
+        "value": "Высокий болевой порог",
+        "description": "Высокий болевой порог",
+        "rarity": "common"
+      },
+      {
+        "id": 379,
+        "type": "health",
+        "value": "Панические атаки в замкнутом пространстве",
+        "description": "Панические атаки в замкнутом пространстве",
+        "rarity": "common"
+      },
+      {
+        "id": 380,
+        "type": "health",
+        "value": "Хронический гастрит",
+        "description": "Хронический гастрит",
+        "rarity": "common"
+      },
+      {
+        "id": 381,
+        "type": "phobia",
+        "value": "Аквафобия — страх глубокой воды",
+        "description": "Аквафобия — страх глубокой воды",
+        "rarity": "common"
+      },
+      {
+        "id": 382,
+        "type": "phobia",
+        "value": "Аэрофобия — страх полётов",
+        "description": "Аэрофобия — страх полётов",
+        "rarity": "common"
+      },
+      {
+        "id": 383,
+        "type": "phobia",
+        "value": "Клаустрофобия — страх замкнутых пространств",
+        "description": "Клаустрофобия — страх замкнутых пространств",
+        "rarity": "common"
+      },
+      {
+        "id": 384,
+        "type": "phobia",
+        "value": "Агорафобия — страх открытых пространств",
+        "description": "Агорафобия — страх открытых пространств",
+        "rarity": "common"
+      },
+      {
+        "id": 385,
+        "type": "phobia",
+        "value": "Пирофобия — страх огня",
+        "description": "Пирофобия — страх огня",
+        "rarity": "common"
+      },
+      {
+        "id": 386,
+        "type": "phobia",
+        "value": "Арахнофобия — страх пауков",
+        "description": "Арахнофобия — страх пауков",
+        "rarity": "common"
+      },
+      {
+        "id": 387,
+        "type": "phobia",
+        "value": "Офидиофобия — страх змей",
+        "description": "Офидиофобия — страх змей",
+        "rarity": "common"
+      },
+      {
+        "id": 388,
+        "type": "phobia",
+        "value": "Танатофобия — страх смерти",
+        "description": "Танатофобия — страх смерти",
+        "rarity": "common"
+      },
+      {
+        "id": 389,
+        "type": "phobia",
+        "value": "Трипанофобия — страх уколов",
+        "description": "Трипанофобия — страх уколов",
+        "rarity": "common"
+      },
+      {
+        "id": 390,
+        "type": "phobia",
+        "value": "Бронтофобия — страх грозы",
+        "description": "Бронтофобия — страх грозы",
+        "rarity": "common"
+      },
+      {
+        "id": 391,
+        "type": "phobia",
+        "value": "Автофобия — страх одиночества",
+        "description": "Автофобия — страх одиночества",
+        "rarity": "common"
+      },
+      {
+        "id": 392,
+        "type": "phobia",
+        "value": "Бактериофобия — страх микробов",
+        "description": "Бактериофобия — страх микробов",
+        "rarity": "common"
+      },
+      {
+        "id": 393,
+        "type": "phobia",
+        "value": "Гефирофобия — страх мостов",
+        "description": "Гефирофобия — страх мостов",
+        "rarity": "common"
+      },
+      {
+        "id": 394,
+        "type": "phobia",
+        "value": "Кинофобия — страх собак",
+        "description": "Кинофобия — страх собак",
+        "rarity": "common"
+      },
+      {
+        "id": 395,
+        "type": "phobia",
+        "value": "Орнитофобия — страх птиц",
+        "description": "Орнитофобия — страх птиц",
+        "rarity": "common"
+      },
+      {
+        "id": 396,
+        "type": "phobia",
+        "value": "Мизофобия — страх грязи",
+        "description": "Мизофобия — страх грязи",
+        "rarity": "common"
+      },
+      {
+        "id": 397,
+        "type": "phobia",
+        "value": "Гелиофобия — страх солнечного света",
+        "description": "Гелиофобия — страх солнечного света",
+        "rarity": "common"
+      },
+      {
+        "id": 398,
+        "type": "phobia",
+        "value": "Сомнифобия — страх сна",
+        "description": "Сомнифобия — страх сна",
+        "rarity": "common"
+      },
+      {
+        "id": 399,
+        "type": "phobia",
+        "value": "Эметофобия — страх рвоты",
+        "description": "Эметофобия — страх рвоты",
+        "rarity": "common"
+      },
+      {
+        "id": 400,
+        "type": "phobia",
+        "value": "Талассофобия — страх моря",
+        "description": "Талассофобия — страх моря",
+        "rarity": "common"
+      },
+      {
+        "id": 401,
+        "type": "inventory",
+        "value": "Солнечная батарея",
+        "description": "Солнечная батарея",
+        "rarity": "common"
+      },
+      {
+        "id": 402,
+        "type": "inventory",
+        "value": "Компактный фильтр для воды",
+        "description": "Компактный фильтр для воды",
+        "rarity": "common"
+      },
+      {
+        "id": 403,
+        "type": "inventory",
+        "value": "Набор инструментов электрика",
+        "description": "Набор инструментов электрика",
+        "rarity": "common"
+      },
+      {
+        "id": 404,
+        "type": "inventory",
+        "value": "Медицинский рюкзак",
+        "description": "Медицинский рюкзак",
+        "rarity": "common"
+      },
+      {
+        "id": 405,
+        "type": "inventory",
+        "value": "Портативная плитка",
+        "description": "Портативная плитка",
+        "rarity": "common"
+      },
+      {
+        "id": 406,
+        "type": "inventory",
+        "value": "Спальный мешок",
+        "description": "Спальный мешок",
+        "rarity": "common"
+      },
+      {
+        "id": 407,
+        "type": "inventory",
+        "value": "Сигнальные ракеты",
+        "description": "Сигнальные ракеты",
+        "rarity": "common"
+      },
+      {
+        "id": 408,
+        "type": "inventory",
+        "value": "Надувная лодка",
+        "description": "Надувная лодка",
+        "rarity": "common"
+      },
+      {
+        "id": 409,
+        "type": "inventory",
+        "value": "Топографическая карта региона",
+        "description": "Топографическая карта региона",
+        "rarity": "common"
+      },
+      {
+        "id": 410,
+        "type": "inventory",
+        "value": "Тепловизор",
+        "description": "Тепловизор",
+        "rarity": "common"
+      },
+      {
+        "id": 411,
+        "type": "inventory",
+        "value": "Запас антибиотиков",
+        "description": "Запас антибиотиков",
+        "rarity": "common"
+      },
+      {
+        "id": 412,
+        "type": "inventory",
+        "value": "Ручной генератор",
+        "description": "Ручной генератор",
+        "rarity": "common"
+      },
+      {
+        "id": 413,
+        "type": "inventory",
+        "value": "Газовая горелка",
+        "description": "Газовая горелка",
+        "rarity": "common"
+      },
+      {
+        "id": 414,
+        "type": "inventory",
+        "value": "Комплект зимней одежды",
+        "description": "Комплект зимней одежды",
+        "rarity": "common"
+      },
+      {
+        "id": 415,
+        "type": "inventory",
+        "value": "Тактический фонарь",
+        "description": "Тактический фонарь",
+        "rarity": "common"
+      },
+      {
+        "id": 416,
+        "type": "inventory",
+        "value": "Рыболовные снасти",
+        "description": "Рыболовные снасти",
+        "rarity": "common"
+      },
+      {
+        "id": 417,
+        "type": "inventory",
+        "value": "Семена овощей",
+        "description": "Семена овощей",
+        "rarity": "common"
+      },
+      {
+        "id": 418,
+        "type": "inventory",
+        "value": "Верёвка 30 метров",
+        "description": "Верёвка 30 метров",
+        "rarity": "common"
+      },
+      {
+        "id": 419,
+        "type": "inventory",
+        "value": "Набор для ремонта обуви",
+        "description": "Набор для ремонта обуви",
+        "rarity": "common"
+      },
+      {
+        "id": 420,
+        "type": "inventory",
+        "value": "Канистра с топливом",
+        "description": "Канистра с топливом",
+        "rarity": "common"
+      },
+      {
+        "id": 421,
+        "type": "trait",
+        "value": "Дисциплинированный",
+        "description": "Дисциплинированный",
+        "rarity": "common"
+      },
+      {
+        "id": 422,
+        "type": "trait",
+        "value": "Самоотверженный",
+        "description": "Самоотверженный",
+        "rarity": "common"
+      },
+      {
+        "id": 423,
+        "type": "trait",
+        "value": "Подозрительный",
+        "description": "Подозрительный",
+        "rarity": "common"
+      },
+      {
+        "id": 424,
+        "type": "trait",
+        "value": "Харизматичный",
+        "description": "Харизматичный",
+        "rarity": "common"
+      },
+      {
+        "id": 425,
+        "type": "trait",
+        "value": "Хладнокровный",
+        "description": "Хладнокровный",
+        "rarity": "common"
+      },
+      {
+        "id": 426,
+        "type": "trait",
+        "value": "Упрямый",
+        "description": "Упрямый",
+        "rarity": "common"
+      },
+      {
+        "id": 427,
+        "type": "trait",
+        "value": "Заботливый",
+        "description": "Заботливый",
+        "rarity": "common"
+      },
+      {
+        "id": 428,
+        "type": "trait",
+        "value": "Педантичный",
+        "description": "Педантичный",
+        "rarity": "common"
+      },
+      {
+        "id": 429,
+        "type": "trait",
+        "value": "Суеверный",
+        "description": "Суеверный",
+        "rarity": "common"
+      },
+      {
+        "id": 430,
+        "type": "trait",
+        "value": "Наблюдательный",
+        "description": "Наблюдательный",
+        "rarity": "common"
+      },
+      {
+        "id": 431,
+        "type": "trait",
+        "value": "Добросовестный",
+        "description": "Добросовестный",
+        "rarity": "common"
+      },
+      {
+        "id": 432,
+        "type": "trait",
+        "value": "Ревнивый",
+        "description": "Ревнивый",
+        "rarity": "common"
+      },
+      {
+        "id": 433,
+        "type": "trait",
+        "value": "Отважный",
+        "description": "Отважный",
+        "rarity": "common"
+      },
+      {
+        "id": 434,
+        "type": "trait",
+        "value": "Миролюбивый",
+        "description": "Миролюбивый",
+        "rarity": "common"
+      },
+      {
+        "id": 435,
+        "type": "trait",
+        "value": "Циничный",
+        "description": "Циничный",
+        "rarity": "common"
+      },
+      {
+        "id": 436,
+        "type": "trait",
+        "value": "Щедрый",
+        "description": "Щедрый",
+        "rarity": "common"
+      },
+      {
+        "id": 437,
+        "type": "trait",
+        "value": "Мстительный",
+        "description": "Мстительный",
+        "rarity": "common"
+      },
+      {
+        "id": 438,
+        "type": "trait",
+        "value": "Остроумный",
+        "description": "Остроумный",
+        "rarity": "common"
+      },
+      {
+        "id": 439,
+        "type": "trait",
+        "value": "Скромный",
+        "description": "Скромный",
+        "rarity": "common"
+      },
+      {
+        "id": 440,
+        "type": "trait",
+        "value": "Навязчиво аккуратный",
+        "description": "Навязчиво аккуратный",
+        "rarity": "common"
+      },
+      {
+        "id": 441,
+        "type": "hobby",
+        "value": "Садоводство",
+        "description": "Садоводство",
+        "rarity": "common"
+      },
+      {
+        "id": 442,
+        "type": "hobby",
+        "value": "Изготовление свечей",
+        "description": "Изготовление свечей",
+        "rarity": "common"
+      },
+      {
+        "id": 443,
+        "type": "hobby",
+        "value": "Ремонт радиотехники",
+        "description": "Ремонт радиотехники",
+        "rarity": "common"
+      },
+      {
+        "id": 444,
+        "type": "hobby",
+        "value": "Пчеловодство",
+        "description": "Пчеловодство",
+        "rarity": "common"
+      },
+      {
+        "id": 445,
+        "type": "hobby",
+        "value": "Скалолазание",
+        "description": "Скалолазание",
+        "rarity": "common"
+      },
+      {
+        "id": 446,
+        "type": "hobby",
+        "value": "Фотография",
+        "description": "Фотография",
+        "rarity": "common"
+      },
+      {
+        "id": 447,
+        "type": "hobby",
+        "value": "Кулинарные эксперименты",
+        "description": "Кулинарные эксперименты",
+        "rarity": "common"
+      },
+      {
+        "id": 448,
+        "type": "hobby",
+        "value": "Сбор грибов",
+        "description": "Сбор грибов",
+        "rarity": "common"
+      },
+      {
+        "id": 449,
+        "type": "hobby",
+        "value": "Резьба по дереву",
+        "description": "Резьба по дереву",
+        "rarity": "common"
+      },
+      {
+        "id": 450,
+        "type": "hobby",
+        "value": "Астрономия",
+        "description": "Астрономия",
+        "rarity": "common"
+      },
+      {
+        "id": 451,
+        "type": "hobby",
+        "value": "Плетение узлов",
+        "description": "Плетение узлов",
+        "rarity": "common"
+      },
+      {
+        "id": 452,
+        "type": "hobby",
+        "value": "Шитьё одежды",
+        "description": "Шитьё одежды",
+        "rarity": "common"
+      },
+      {
+        "id": 453,
+        "type": "hobby",
+        "value": "Настольные игры",
+        "description": "Настольные игры",
+        "rarity": "common"
+      },
+      {
+        "id": 454,
+        "type": "hobby",
+        "value": "Сборка моделей техники",
+        "description": "Сборка моделей техники",
+        "rarity": "common"
+      },
+      {
+        "id": 455,
+        "type": "hobby",
+        "value": "Оригами",
+        "description": "Оригами",
+        "rarity": "common"
+      },
+      {
+        "id": 456,
+        "type": "hobby",
+        "value": "Выращивание микрозелени",
+        "description": "Выращивание микрозелени",
+        "rarity": "common"
+      },
+      {
+        "id": 457,
+        "type": "hobby",
+        "value": "Игра на губной гармошке",
+        "description": "Игра на губной гармошке",
+        "rarity": "common"
+      },
+      {
+        "id": 458,
+        "type": "hobby",
+        "value": "Спортивное ориентирование",
+        "description": "Спортивное ориентирование",
+        "rarity": "common"
+      },
+      {
+        "id": 459,
+        "type": "hobby",
+        "value": "Гончарное дело",
+        "description": "Гончарное дело",
+        "rarity": "common"
+      },
+      {
+        "id": 460,
+        "type": "hobby",
+        "value": "Копчение продуктов",
+        "description": "Копчение продуктов",
+        "rarity": "common"
+      },
+      {
+        "id": 461,
+        "type": "age",
+        "value": "18 лет",
+        "description": "18 лет",
+        "rarity": "common"
+      },
+      {
+        "id": 462,
+        "type": "age",
+        "value": "21 год",
+        "description": "21 год",
+        "rarity": "common"
+      },
+      {
+        "id": 463,
+        "type": "age",
+        "value": "24 года",
+        "description": "24 года",
+        "rarity": "common"
+      },
+      {
+        "id": 464,
+        "type": "age",
+        "value": "27 лет",
+        "description": "27 лет",
+        "rarity": "common"
+      },
+      {
+        "id": 465,
+        "type": "age",
+        "value": "30 лет",
+        "description": "30 лет",
+        "rarity": "common"
+      },
+      {
+        "id": 466,
+        "type": "age",
+        "value": "33 года",
+        "description": "33 года",
+        "rarity": "common"
+      },
+      {
+        "id": 467,
+        "type": "age",
+        "value": "36 лет",
+        "description": "36 лет",
+        "rarity": "common"
+      },
+      {
+        "id": 468,
+        "type": "age",
+        "value": "39 лет",
+        "description": "39 лет",
+        "rarity": "common"
+      },
+      {
+        "id": 469,
+        "type": "age",
+        "value": "42 года",
+        "description": "42 года",
+        "rarity": "common"
+      },
+      {
+        "id": 470,
+        "type": "age",
+        "value": "45 лет",
+        "description": "45 лет",
+        "rarity": "common"
+      },
+      {
+        "id": 471,
+        "type": "age",
+        "value": "48 лет",
+        "description": "48 лет",
+        "rarity": "common"
+      },
+      {
+        "id": 472,
+        "type": "age",
+        "value": "51 год",
+        "description": "51 год",
+        "rarity": "common"
+      },
+      {
+        "id": 473,
+        "type": "age",
+        "value": "54 года",
+        "description": "54 года",
+        "rarity": "common"
+      },
+      {
+        "id": 474,
+        "type": "age",
+        "value": "57 лет",
+        "description": "57 лет",
+        "rarity": "common"
+      },
+      {
+        "id": 475,
+        "type": "age",
+        "value": "60 лет",
+        "description": "60 лет",
+        "rarity": "common"
+      },
+      {
+        "id": 476,
+        "type": "age",
+        "value": "63 года",
+        "description": "63 года",
+        "rarity": "common"
+      },
+      {
+        "id": 477,
+        "type": "age",
+        "value": "66 лет",
+        "description": "66 лет",
+        "rarity": "common"
+      },
+      {
+        "id": 478,
+        "type": "age",
+        "value": "69 лет",
+        "description": "69 лет",
+        "rarity": "common"
+      },
+      {
+        "id": 479,
+        "type": "age",
+        "value": "72 года",
+        "description": "72 года",
+        "rarity": "common"
+      },
+      {
+        "id": 480,
+        "type": "age",
+        "value": "75 лет",
+        "description": "75 лет",
+        "rarity": "common"
+      },
+      {
+        "id": 481,
+        "type": "special",
+        "value": "Пережил кораблекрушение",
+        "description": "Пережил кораблекрушение",
+        "rarity": "common"
+      },
+      {
+        "id": 482,
+        "type": "special",
+        "value": "Собрал самодельный ветрогенератор",
+        "description": "Собрал самодельный ветрогенератор",
+        "rarity": "common"
+      },
+      {
+        "id": 483,
+        "type": "special",
+        "value": "Умеет вскрывать простые замки",
+        "description": "Умеет вскрывать простые замки",
+        "rarity": "common"
+      },
+      {
+        "id": 484,
+        "type": "special",
+        "value": "Никогда не пьёт алкоголь",
+        "description": "Никогда не пьёт алкоголь",
+        "rarity": "common"
+      },
+      {
+        "id": 485,
+        "type": "special",
+        "value": "Спит по 4 часа в сутки",
+        "description": "Спит по 4 часа в сутки",
+        "rarity": "common"
+      },
+      {
+        "id": 486,
+        "type": "special",
+        "value": "Выиграл чемпионат по шахматам",
+        "description": "Выиграл чемпионат по шахматам",
+        "rarity": "common"
+      },
+      {
+        "id": 487,
+        "type": "special",
+        "value": "Панически боится лжи и всегда говорит правду",
+        "description": "Панически боится лжи и всегда говорит правду",
+        "rarity": "common"
+      },
+      {
+        "id": 488,
+        "type": "special",
+        "value": "Однажды прожил месяц в лесу",
+        "description": "Однажды прожил месяц в лесу",
+        "rarity": "common"
+      },
+      {
+        "id": 489,
+        "type": "special",
+        "value": "Знает, как чинить дизельные двигатели",
+        "description": "Знает, как чинить дизельные двигатели",
+        "rarity": "common"
+      },
+      {
+        "id": 490,
+        "type": "special",
+        "value": "Имеет фотографическую память на лица",
+        "description": "Имеет фотографическую память на лица",
+        "rarity": "common"
+      },
+      {
+        "id": 491,
+        "type": "special",
+        "value": "Способен долго не есть без потери концентрации",
+        "description": "Способен долго не есть без потери концентрации",
+        "rarity": "common"
+      },
+      {
+        "id": 492,
+        "type": "special",
+        "value": "Прошёл курсы первой помощи",
+        "description": "Прошёл курсы первой помощи",
+        "rarity": "common"
+      },
+      {
+        "id": 493,
+        "type": "special",
+        "value": "Был волонтёром в зоне бедствия",
+        "description": "Был волонтёром в зоне бедствия",
+        "rarity": "common"
+      },
+      {
+        "id": 494,
+        "type": "special",
+        "value": "Умеет готовить из минимального набора продуктов",
+        "description": "Умеет готовить из минимального набора продуктов",
+        "rarity": "common"
+      },
+      {
+        "id": 495,
+        "type": "special",
+        "value": "Слышит очень тихие звуки",
+        "description": "Слышит очень тихие звуки",
+        "rarity": "common"
+      },
+      {
+        "id": 496,
+        "type": "special",
+        "value": "Умеет договариваться даже с врагами",
+        "description": "Умеет договариваться даже с врагами",
+        "rarity": "common"
+      },
+      {
+        "id": 498,
+        "type": "special",
+        "value": "Никогда не теряется на местности",
+        "description": "Никогда не теряется на местности",
+        "rarity": "common"
+      },
+      {
+        "id": 499,
+        "type": "special",
+        "value": "Ведёт дневник наблюдений за людьми",
+        "description": "Ведёт дневник наблюдений за людьми",
+        "rarity": "common"
+      },
+      {
+        "id": 500,
+        "type": "special",
+        "value": "Отличает съедобные растения от ядовитых",
+        "description": "Отличает съедобные растения от ядовитых",
+        "rarity": "common"
       }
     ],
     "locations": [
