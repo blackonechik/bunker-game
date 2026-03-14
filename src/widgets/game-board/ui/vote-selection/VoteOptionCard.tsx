@@ -5,6 +5,8 @@ import { VOTE_OPTION_FALLBACK_IMAGE } from './constants';
 interface VoteOptionCardProps {
   option: VoteOptionItem;
   isActive?: boolean;
+  isSelected?: boolean;
+  isSubmitting?: boolean;
   hoverBorderClass: string;
   titleClassName: string;
   cornerClassName: string;
@@ -15,6 +17,8 @@ interface VoteOptionCardProps {
 export function VoteOptionCard({
   option,
   isActive = true,
+  isSelected = false,
+  isSubmitting = false,
   hoverBorderClass,
   titleClassName,
   cornerClassName,
@@ -23,8 +27,18 @@ export function VoteOptionCard({
 }: VoteOptionCardProps) {
   return (
     <article
-      className={`w-full shrink-0 group relative bg-zinc-900 border-2 border-zinc-800 p-2 transition-all duration-300 ${isActive ? hoverBorderClass : ''}`}
+      className={`w-full shrink-0 group relative bg-zinc-900 border-2 p-2 transition-all duration-300 ${
+        isSelected
+          ? 'border-emerald-500 shadow-[0_0_32px_rgba(16,185,129,0.18)]'
+          : `border-zinc-800 ${isActive ? hoverBorderClass : ''}`
+      }`}
     >
+      {isSelected && (
+        <div className="absolute left-4 top-4 z-10 border border-emerald-500/70 bg-emerald-500/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-emerald-300 backdrop-blur-sm">
+          Ваш голос
+        </div>
+      )}
+
       <div className="overflow-hidden h-64 border border-zinc-800">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -39,8 +53,13 @@ export function VoteOptionCard({
           {option.name}
         </h3>
         <p className={`text-sm text-zinc-400 mb-6 ${descriptionMinHeightClass}`}>{option.description}</p>
-        <Button className="w-full mt-auto" size="small" onClick={() => onSelect(option.id)}>
-          Голосовать
+        <Button
+          className={`w-full mt-auto ${isSelected ? '!border-emerald-500 !bg-emerald-500/10 !text-emerald-300 hover:!bg-emerald-500/20' : ''}`}
+          size="small"
+          onClick={() => onSelect(option.id)}
+          disabled={isSubmitting && !isSelected}
+        >
+          {isSelected ? 'Голос учтён' : isSubmitting ? 'Отправка...' : 'Голосовать'}
         </Button>
       </div>
 

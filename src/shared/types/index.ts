@@ -131,6 +131,17 @@ export interface VoteResultDTO {
   voteCount: number;
 }
 
+export interface VoteAvatarDTO {
+  playerId: number;
+  name: string;
+  image?: string | null;
+}
+
+export interface PlayerVoteProgressDTO {
+  targetPlayerId: number;
+  voters: VoteAvatarDTO[];
+}
+
 export interface GameStatsDTO {
   totalRounds: number;
   survivorCount: number;
@@ -148,4 +159,3 @@ export interface RoomJoinResponse {
   roomId: number;
   playerId: number;
 }
-

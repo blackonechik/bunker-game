@@ -254,6 +254,44 @@ export class SocketServer {
     }
   }
 
+  private async emitPlayerVotesUpdate(roomId: number, roomCode: string, round: number, socketId?: string) {
+    const [votes, players] = await Promise.all([
+      GameService.getPlayerVotes(roomId, round),
+      RoomService.getPlayers(roomId),
+    ]);
+
+    const playersById = new Map(players.map((player) => [player.id, player]));
+    const groupedVotes = new Map<number, Array<{ playerId: number; name: string; image?: string | null }>>();
+
+    for (const vote of votes) {
+      const voter = playersById.get(vote.voterId);
+
+      if (!voter) {
+        continue;
+      }
+
+      const voters = groupedVotes.get(vote.targetId) || [];
+      voters.push({
+        playerId: voter.id,
+        name: voter.name,
+        image: voter.image ?? null,
+      });
+      groupedVotes.set(vote.targetId, voters);
+    }
+
+    const payload = Array.from(groupedVotes.entries()).map(([targetPlayerId, voters]) => ({
+      targetPlayerId,
+      voters,
+    }));
+
+    if (socketId) {
+      this.io.to(socketId).emit('player:votes:update', { votes: payload });
+      return;
+    }
+
+    this.io.to(`room:${roomCode}`).emit('player:votes:update', { votes: payload });
+  }
+
   private clearDiscussionTimer(roomId: number) {
     const timer = this.roomDiscussionTimers.get(roomId);
     if (timer) {
@@ -558,6 +596,10 @@ export class SocketServer {
               remainingSeconds,
               endsAt: room.roundTimer,
             });
+          }
+
+          if (room.state === RoomState.VOTING) {
+            await this.emitPlayerVotesUpdate(room.id, room.code, room.currentRound, socket.id);
           }
 
           callback({ success: true, data: { room, players, playerId: player.id } });
@@ -922,6 +964,7 @@ export class SocketServer {
           await GameService.votePlayer(room.id, player.id, data.targetPlayerId, room.currentRound);
 
           callback({ success: true });
+          await this.emitPlayerVotesUpdate(room.id, room.code, room.currentRound);
           await this.processPlayerVotingOutcome(room.id, room.code, room.currentRound);
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Ошибка голосования';

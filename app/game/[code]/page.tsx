@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useSession } from '@/shared/lib/auth-client';
 import { useSocket } from '@/app/providers/socket-provider';
 import { useSocketEvent, useSocketEmit } from '@/shared/hooks/use-socket';
-import { PlayerDTO, RoomDTO, RoomState, ChatMessageDTO, ApocalypseDTO, LocationDTO } from '@/shared/types';
+import { PlayerDTO, RoomDTO, RoomState, ChatMessageDTO, ApocalypseDTO, LocationDTO, PlayerVoteProgressDTO } from '@/shared/types';
 import { GameTopBar, SystemLogPanel, PlayersGrid, MyCardsHud, VictoryScreen, VoteSelectionScreen } from '@/widgets/game-board';
 
 interface RoundStartPayload {
@@ -50,6 +50,11 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   const [nowTimestamp, setNowTimestamp] = useState<number>(() => Date.now());
   const [showIntroNarrative, setShowIntroNarrative] = useState(false);
   const [eliminationAnnouncement, setEliminationAnnouncement] = useState<EliminationAnnouncement | null>(null);
+  const [playerVoteProgress, setPlayerVoteProgress] = useState<PlayerVoteProgressDTO[]>([]);
+  const [selectedApocalypseId, setSelectedApocalypseId] = useState<number | null>(null);
+  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
+  const [selectedPlayerVoteId, setSelectedPlayerVoteId] = useState<number | null>(null);
+  const [submittingVoteType, setSubmittingVoteType] = useState<'apocalypse' | 'location' | 'player' | null>(null);
 
   const resumeAttemptedRef = useRef(false);
   const systemMessageKeysRef = useRef<Set<string>>(new Set());
@@ -237,6 +242,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     }
 
     setApocalypseOptions([]);
+    setSelectedApocalypseId(null);
   });
 
   useSocketEvent<{ winnerId: number }>('voting:location:complete', (data) => {
@@ -247,6 +253,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     }
 
     setLocationOptions([]);
+    setSelectedLocationId(null);
   });
 
   useEffect(() => {
@@ -302,6 +309,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
         ? Math.max(0, Math.ceil((endsAtMs - Date.now()) / 1000))
         : (data.duration ?? 60)
     );
+    setSelectedPlayerVoteId(null);
     addSystemMessageOnce(`round-start:${data.round}`, `Раунд ${data.round}: обсуждение (60 сек)`);
   });
 
@@ -323,12 +331,18 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
     setRoom((prev) => (prev ? { ...prev, state: data.state } : prev));
 
     if (data.state === RoomState.CARD_REVEAL) {
+      setPlayerVoteProgress([]);
+      setSelectedPlayerVoteId(null);
       addSystemMessageOnce(`phase:${data.round}:CARD_REVEAL`, `Раунд ${data.round}: открытие карт`);
     }
 
     if (data.state === RoomState.VOTING) {
       addSystemMessageOnce(`phase:${data.round}:VOTING`, `Раунд ${data.round}: голосование за исключение`);
     }
+  });
+
+  useSocketEvent<{ votes: PlayerVoteProgressDTO[] }>('player:votes:update', (data) => {
+    setPlayerVoteProgress(data.votes || []);
   });
 
   useSocketEvent<{ playerId: number; cardId: number }>('card:revealed', (data) => {
@@ -381,6 +395,8 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
       eliminationTimeoutRef.current = null;
     }, 5000);
 
+    setSelectedPlayerVoteId(null);
+    setPlayerVoteProgress([]);
     setPlayers((prev) =>
       prev.map((playerItem) =>
         playerItem.id === data.playerId ? { ...playerItem, isAlive: false } : playerItem
@@ -391,6 +407,8 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   useSocketEvent<{ winners: PlayerDTO[] }>('game:ended', (data) => {
     addSystemMessage('Игра окончена: в бункере осталось 2 выживших.');
     setWinners(data.winners || []);
+    setSelectedPlayerVoteId(null);
+    setPlayerVoteProgress([]);
     setRoom((prev) => (prev ? { ...prev, state: RoomState.FINISHED } : prev));
   });
 
@@ -436,6 +454,7 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   const emitWithResumeRetry = async <TData,>(event: string, data: TData) => {
     try {
       await emit(event, data);
+      return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -443,24 +462,39 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
         try {
           await emit('player:resume', { code });
           await emit(event, data);
-          return;
+          return true;
         } catch (retryError) {
           const retryMessage = retryError instanceof Error ? retryError.message : 'Unknown error';
           addSystemMessage(`Ошибка: ${retryMessage}`);
-          return;
+          return false;
         }
       }
 
       addSystemMessage(`Ошибка: ${errorMessage}`);
+      return false;
     }
   };
 
   const handleVoteApocalypse = async (apocalypseId: number) => {
-    await emitWithResumeRetry('vote:apocalypse', { apocalypseId });
+    setSubmittingVoteType('apocalypse');
+    const success = await emitWithResumeRetry('vote:apocalypse', { apocalypseId });
+    setSubmittingVoteType(null);
+
+    if (success) {
+      setSelectedApocalypseId(apocalypseId);
+      addSystemMessageOnce(`self-vote:apocalypse:${apocalypseId}`, 'Ваш голос за апокалипсис учтён. Ожидаем остальных игроков.');
+    }
   };
 
   const handleVoteLocation = async (locationId: number) => {
-    await emitWithResumeRetry('vote:location', { locationId });
+    setSubmittingVoteType('location');
+    const success = await emitWithResumeRetry('vote:location', { locationId });
+    setSubmittingVoteType(null);
+
+    if (success) {
+      setSelectedLocationId(locationId);
+      addSystemMessageOnce(`self-vote:location:${locationId}`, 'Ваш голос за локацию учтён. Ожидаем остальных игроков.');
+    }
   };
 
   const handleRevealCard = async (cardId: number) => {
@@ -468,7 +502,14 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
   };
 
   const handleVotePlayer = async (targetPlayerId: number) => {
-    await emitWithResumeRetry('vote:player', { targetPlayerId });
+    setSubmittingVoteType('player');
+    const success = await emitWithResumeRetry('vote:player', { targetPlayerId });
+    setSubmittingVoteType(null);
+
+    if (success) {
+      setSelectedPlayerVoteId(targetPlayerId);
+      addSystemMessageOnce(`self-vote:player:${currentRound}:${targetPlayerId}`, 'Ваш голос на исключение учтён. Ожидаем остальных игроков.');
+    }
   };
 
   const renderVoteLoader = (title: string) => (
@@ -514,6 +555,8 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
                 options={apocalypseOptions}
                 onSelect={handleVoteApocalypse}
                 mode="apocalypse"
+                selectedOptionId={room?.state === RoomState.APOCALYPSE_VOTE ? selectedApocalypseId : null}
+                isSubmitting={submittingVoteType === 'apocalypse'}
               />
             ) : (
               renderVoteLoader('апокалипсис')
@@ -535,6 +578,8 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
                 options={locationOptions}
                 onSelect={handleVoteLocation}
                 mode="location"
+                selectedOptionId={room?.state === RoomState.LOCATION_VOTE ? selectedLocationId : null}
+                isSubmitting={submittingVoteType === 'location'}
               />
             ) : (
               renderVoteLoader('локацию')
@@ -644,11 +689,19 @@ export default function GamePage({ params }: { params: Promise<{ code: string }>
               </div>
 
               <div className="col-span-9 max-lg:col-span-1">
+                {room?.state === RoomState.VOTING && selectedPlayerVoteId && (
+                  <div className="mb-4 border border-emerald-500/60 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 uppercase tracking-[0.16em]">
+                    Ваш голос учтён. Ожидаем, пока проголосуют остальные игроки.
+                  </div>
+                )}
                 <PlayersGrid
                   players={players}
                   currentPlayerId={currentPlayerId}
                   canVote={room?.state === RoomState.VOTING}
                   onVote={handleVotePlayer}
+                  selectedTargetPlayerId={room?.state === RoomState.VOTING ? selectedPlayerVoteId : null}
+                  isSubmittingVote={submittingVoteType === 'player'}
+                  liveVotes={room?.state === RoomState.VOTING ? playerVoteProgress : []}
                 />
               </div>
             </main>

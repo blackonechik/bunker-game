@@ -12,6 +12,8 @@ export function VoteSelectionScreen({
 	options,
 	onSelect,
 	mode,
+	selectedOptionId = null,
+	isSubmitting = false,
 }: VoteSelectionScreenProps) {
 	const appearance = VOTE_APPEARANCE[mode];
 	const [activeIndex, setActiveIndex] = useState(0);
@@ -31,6 +33,16 @@ export function VoteSelectionScreen({
 				<Title className="mb-4">
 					Выберите {title}
 				</Title>
+				{selectedOptionId ? (
+					<div className="inline-flex items-center gap-2 border border-emerald-500/60 bg-emerald-500/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
+						<span className="block h-2 w-2 rounded-full bg-emerald-400" />
+						Ваш голос учтён. Ожидаем остальных игроков...
+					</div>
+				) : (
+					<p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
+						После выбора ваш голос будет отмечен на карточке
+					</p>
+				)}
 			</div>
 
 			<section className="hidden max-md:block space-y-6">
@@ -48,6 +60,8 @@ export function VoteSelectionScreen({
 									key={option.id}
 									option={option}
 									isActive={isActive}
+									isSelected={selectedOptionId === option.id}
+									isSubmitting={isSubmitting}
 									hoverBorderClass={appearance.hoverBorder}
 									titleClassName={isActive ? appearance.activeTextColor : ''}
 									cornerClassName={appearance.corner}
@@ -75,6 +89,8 @@ export function VoteSelectionScreen({
 					<VoteOptionCard
 						key={option.id}
 						option={option}
+						isSelected={selectedOptionId === option.id}
+						isSubmitting={isSubmitting}
 						hoverBorderClass={appearance.hoverBorder}
 						titleClassName={appearance.hoverText}
 						cornerClassName={appearance.corner}

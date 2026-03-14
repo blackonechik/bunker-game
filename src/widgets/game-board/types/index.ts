@@ -1,4 +1,4 @@
-import { ChatMessageDTO, PlayerCardDTO, PlayerDTO, RoomState } from '@/shared/types';
+import { ChatMessageDTO, PlayerCardDTO, PlayerDTO, PlayerVoteProgressDTO, RoomState } from '@/shared/types';
 
 export interface VoteOptionItem {
   id: number;
@@ -12,6 +12,8 @@ export interface VoteSelectionScreenProps {
   options: VoteOptionItem[];
   onSelect: (id: number) => void;
   mode: 'apocalypse' | 'location';
+  selectedOptionId?: number | null;
+  isSubmitting?: boolean;
 }
 
 export interface GameTopBarProps {
@@ -44,6 +46,9 @@ export interface PlayersGridProps {
   currentPlayerId?: number;
   canVote: boolean;
   onVote: (targetPlayerId: number) => void;
+  selectedTargetPlayerId?: number | null;
+  isSubmittingVote?: boolean;
+  liveVotes?: PlayerVoteProgressDTO[];
 }
 
 export interface SystemLogPanelProps {
