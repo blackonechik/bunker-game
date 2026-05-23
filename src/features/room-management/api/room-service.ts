@@ -6,6 +6,10 @@ import { RoomState } from '@/shared/types';
 
 const MAX_ACTIVE_ROOMS_PER_HOST = 3;
 
+export type PlayerWithProfileImage = Player & {
+  image: string | null;
+};
+
 export class TooManyActiveRoomsError extends Error {
   constructor(message = 'У вас слишком много активных комнат. Завершите текущие и попробуйте снова.') {
     super(message);
@@ -162,7 +166,7 @@ export class RoomService {
     await roomRepo.delete(roomId);
   }
 
-  static async getPlayers(roomId: number) {
+  static async getPlayers(roomId: number): Promise<PlayerWithProfileImage[]> {
     const ds = getDataSource();
     const playerRepo = ds.getRepository(Player);
     
@@ -171,8 +175,13 @@ export class RoomService {
       relations: ['cards', 'cards.card'],
     });
 
+    const playersWithFallbackImages = players.map((player) => ({
+      ...player,
+      image: null,
+    }));
+
     if (players.length === 0) {
-      return players;
+      return playersWithFallbackImages;
     }
 
     const userIds = Array.from(
@@ -185,7 +194,7 @@ export class RoomService {
     );
 
     if (userIds.length === 0) {
-      return players;
+      return playersWithFallbackImages;
     }
 
     let profileRows: Array<{ id: string; image: string | null }> = [];
